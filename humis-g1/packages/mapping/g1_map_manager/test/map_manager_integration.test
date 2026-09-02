@@ -1,0 +1,23 @@
+<launch>
+  <!-- g1_map_manager integration gate: the real map_manager_node against a single
+       python mock node that plays the SLAM backend + asserts the lifecycle. -->
+  <arg name="maps_root" default="/tmp/g1_map_manager_itest"/>
+
+  <node name="g1_map_manager" pkg="g1_map_manager" type="g1_map_manager_node"
+        output="log">
+    <param name="maps_root" value="$(arg maps_root)"/>
+    <param name="state_rate" value="20.0"/>
+    <param name="reloc_seed_timeout" value="1.0"/>
+    <param name="reloc_global_timeout" value="2.0"/>
+  </node>
+
+  <!-- Content editor node exercised by the gate. -->
+  <node name="g1_map_edit" pkg="g1_map_manager" type="g1_map_edit_node" output="log">
+    <param name="maps_root" value="$(arg maps_root)"/>
+  </node>
+
+  <test test-name="map_manager_integration" pkg="g1_map_manager"
+        type="map_manager_integration_test.py" time-limit="120.0">
+    <param name="maps_root" value="$(arg maps_root)"/>
+  </test>
+</launch>

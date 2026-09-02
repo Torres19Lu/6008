@@ -1,0 +1,8 @@
+<launch>
+  <!-- Fresh mapping-mode backend node (no map_path); the test builds a fixture map
+       in-process and drives the node's services to verify the map-management hooks. -->
+  <node pkg="g1_slam_backend" type="g1_slam_backend_node" name="g1_slam_backend"
+        output="log"/>
+  <test test-name="backend_node_hooks" pkg="g1_slam_backend"
+        type="test_backend_node_hooks" time-limit="120.0"/>
+</launch>

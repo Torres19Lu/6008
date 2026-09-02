@@ -1,0 +1,7 @@
+geometry_msgs/Pose initial_guess
+bool use_guess
+---
+bool success
+string message
+geometry_msgs/Pose locked_pose   # valid when success
+g1_msgs/RelocQuality quality     # diagnostic; filled on success and failure

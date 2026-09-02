@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!--
+  Safety-critical bring-up of the G1 onboard high-level locomotion.
+
+  The DDS network interface is the NAME of the robot-facing interface, read from
+  $G1_NETWORK_INTERFACE at launch (override with interface:=). Unlike g1_lidar,
+  no host-IP resolution is needed: unitree_sdk2 ChannelFactory takes the
+  interface name directly.
+
+  The node boots latched-safe (halted); it issues NO velocity until the operator
+  brings it up with /g1/set_mode walk_motion (FSM 500, the ONLY mode with balance
+  control). /g1/halt is a SOFT-STOP (zero velocity, robot stays balanced in FSM
+  500); it never damps. WARNING: set_mode damping/zero_torque/lock_standing have
+  NO balance control -> the robot FALLS; use only when physically supported.
+
+  Topics:  /joint_states (incl. waist_yaw_joint), /g1/body_imu, /g1/loco_status.
+  Subs:    /cmd_vel (Twist: linear.x=vx, linear.y=vy, angular.z=vyaw).
+  Srvs:    /g1/halt (std_srvs/Trigger), /g1/set_mode (g1_msgs/SetMode).
+
+  Usage:
+    roslaunch g1_locomotion locomotion.launch
+    roslaunch g1_locomotion locomotion.launch interface:=eth0
+-->
+<launch>
+  <arg name="interface" default="$(optenv G1_NETWORK_INTERFACE)"/>
+  <arg name="config" default="$(find g1_locomotion)/config/locomotion.yaml"/>
+
+  <node name="g1_locomotion" pkg="g1_locomotion" type="g1_locomotion_node"
+        output="screen" required="true">
+    <rosparam command="load" file="$(arg config)"/>
+    <param name="network_interface" value="$(arg interface)"/>
+  </node>
+</launch>

@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>g1_locomotion</name>
+  <version>0.1.0</version>
+  <description>
+    Safety-critical bridge to the Unitree G1 onboard high-level locomotion:
+    maps /cmd_vel (Twist vx,vy,vyaw) to LocoClient SetVelocity with velocity and
+    acceleration limits, slew-rate limiting, a command watchdog, and an SDK-side
+    duration TTL; republishes the G1 LowState as /joint_states (incl. waist_yaw),
+    /g1/body_imu, and /g1/loco_status; exposes /g1/halt and /g1/set_mode.
+  </description>
+
+  <maintainer email="66817439+rohanhong@users.noreply.github.com">Rohan</maintainer>
+  <author email="66817439+rohanhong@users.noreply.github.com">Rohan</author>
+  <license>Proprietary</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>roscpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>g1_msgs</depend>
+
+  <!-- unitree_sdk2 is a non-catkin CMake package installed to /usr/local
+       (see docs/INSTALL.md step 3); found via find_package, not a ROS depend. -->
+  <export>
+  </export>
+</package>

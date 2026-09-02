@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<!--
+  g1_slam_backend: Scan Context loop closure + GTSAM iSAM2 pose graph for the G1.
+
+  Inputs : /slam/frontend/odom (nav_msgs/Odometry, odom->base_link),
+           /slam/frontend/cloud_registered (PointCloud2, odom frame).
+  Outputs: /slam/map (PointCloud2, latched, map frame), /slam/pose_graph
+           (MarkerArray), TF map->odom (this node's only TF; the loop-corrected
+           correction layer, REP-105).
+
+  This node only CONSUMES topics; it never publishes anything below odom and does
+  not feed corrections back to the front end. The launch offers opt-in args to
+  bring up its upstream (all default off):
+    start_frontend : g1_slam_frontend (the LiDAR-inertial odometry). The frontend
+                     has its own start_lidar / start_state args, surfaced here and
+                     passed through so a one-line full stack is possible.
+    start_lidar    : forwarded to the frontend (g1_lidar in CustomMsg mode).
+    start_state    : forwarded to the frontend (g1_locomotion + g1_description).
+    map_path       : if set, load this map directory at startup and begin in
+                     localization-only mode; empty = pure mapping.
+
+  Persistence + relocalization are runtime services:
+    /slam/save_map (g1_msgs/SaveMap), /slam/load_map (g1_msgs/LoadMap),
+    /slam/relocalize (g1_msgs/Relocalize). After a load the map is frozen and the
+    node tracks map->odom against it; map->odom is not broadcast until a lock.
+
+  Usage:
+    roslaunch g1_slam_backend slam_backend.launch                                   # frontend already up / bag
+    roslaunch g1_slam_backend slam_backend.launch rviz:=true                        # + viz
+    roslaunch g1_slam_backend slam_backend.launch start_frontend:=true rviz:=true   # backend + frontend (sensors up elsewhere)
+    roslaunch g1_slam_backend slam_backend.launch start_frontend:=true start_lidar:=true start_state:=true rviz:=true  # full live stack
+    roslaunch g1_slam_backend slam_backend.launch map_path:=/path/to/map rviz:=true # load a saved map and localize
+-->
+<launch>
+  <arg name="rviz" default="false"/>
+  <arg name="start_frontend" default="false"/>              <!-- bring up g1_slam_frontend (the upstream odometry) -->
+  <arg name="start_lidar" default="false"/>                 <!-- forwarded to the frontend: g1_lidar in CustomMsg mode -->
+  <arg name="start_state" default="false"/>                 <!-- forwarded to the frontend: g1_locomotion + g1_description -->
+  <arg name="map_path" default=""/>                         <!-- load this map dir at startup + localize; empty = mapping -->
+  <arg name="interface" default="$(optenv G1_NETWORK_INTERFACE)"/>
+
+  <!-- Optional upstream: the LiDAR-inertial odometry. The frontend owns its own
+       deeper upstreams (lidar, robot state); we pass the toggles through. -->
+  <include if="$(arg start_frontend)" file="$(find g1_slam_frontend)/launch/slam_frontend.launch">
+    <arg name="start_lidar" value="$(arg start_lidar)"/>
+    <arg name="start_state" value="$(arg start_state)"/>
+    <arg name="interface" value="$(arg interface)"/>
+  </include>
+
+  <node name="g1_slam_backend" pkg="g1_slam_backend" type="g1_slam_backend_node"
+        output="screen" required="true">
+    <rosparam command="load" file="$(find g1_slam_backend)/config/slam_backend.yaml"/>
+    <param name="map_path" value="$(arg map_path)"/>        <!-- non-empty: load + localize at startup -->
+  </node>
+
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" name="slam_backend_rviz"
+        args="-d $(find g1_slam_backend)/config/slam_backend.rviz"/>
+</launch>

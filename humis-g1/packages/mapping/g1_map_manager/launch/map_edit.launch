@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!--
+  Offline map content editing: obstacle deletion, keyframe trim/crop, metadata. The
+  editor tracks the active map from /map_manager/state; start the manager in
+  localization on the target map (or set start_manager:=true here), then edit via the
+  MapEditCommand service and the RViz Publish Point tool (/clicked_point). Saves are
+  non-destructive (edits/*.yaml + backups); the version snapshot is never touched.
+-->
+<launch>
+  <arg name="maps_root"     default=""/>
+  <arg name="start_manager" default="false"/>
+  <arg name="rviz"          default="false"/>
+
+  <node if="$(arg start_manager)" name="g1_map_manager" pkg="g1_map_manager"
+        type="g1_map_manager_node" output="screen">
+    <rosparam command="load" file="$(find g1_map_manager)/config/map_manager.yaml"/>
+    <param name="maps_root" value="$(arg maps_root)"/>
+  </node>
+
+  <node name="g1_map_edit" pkg="g1_map_manager" type="g1_map_edit_node"
+        output="screen">
+    <param name="maps_root" value="$(arg maps_root)"/>
+  </node>
+  <node name="g1_keyframe_overlay" pkg="g1_map_manager"
+        type="g1_keyframe_overlay_node" output="screen">
+    <param name="maps_root" value="$(arg maps_root)"/>
+  </node>
+
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" name="g1_map_edit_rviz"
+        args="-d $(find g1_map_manager)/config/map_manager.rviz"/>
+</launch>

@@ -1,0 +1,456 @@
+# Manifest pinning the g1_maps assets to a specific Hugging Face commit.
+# The map state for s-b4 (geometry binaries + YAML, overlays, and the global
+# topology) is NOT committed to git (see maps/.gitignore + topology/.gitignore);
+# scripts/fetch_maps.py downloads each file from HF and verifies its sha256.
+# To update: push new map assets to HF, then bump hf_revision + per-file sha256 here.
+hf_repo: humis-g1/g1-maps
+hf_repo_type: dataset
+hf_revision: a5873e25b461d9d6bda2d0d0ce451e7e4f35eb32
+# dest_dir is the package root: each filename below carries its full maps/ or
+# topology/ path, so the fetch restores the exact package tree (maps/ + topology/).
+dest_dir: .
+files:
+  - filename: maps/s-b4/geometry/keyframes/000000.pcd
+    sha256: "3aae8f3db1ab0f785329e5bf648fd3bf386a0b46c0843b884a307a61d66cadaf"
+  - filename: maps/s-b4/geometry/keyframes/000001.pcd
+    sha256: "ee6543aeafde51af00f37eca7e75d999f1b3200ff341bac9e6b3d2fd70073608"
+  - filename: maps/s-b4/geometry/keyframes/000002.pcd
+    sha256: "6c28d1d389f84d023dd57d5937d3ab1e0c8374b56f872a10efe44eb6a411181a"
+  - filename: maps/s-b4/geometry/keyframes/000003.pcd
+    sha256: "7867b318f3a357edceb7248e0a0a42beb3661be5462ec6b4c1816a22036e152e"
+  - filename: maps/s-b4/geometry/keyframes/000004.pcd
+    sha256: "ca73355d316dc43538940520ce3204f925ec4181ec0a9fbb8a6bc425dec9ad44"
+  - filename: maps/s-b4/geometry/keyframes/000005.pcd
+    sha256: "b43b77ad17890868e6a696da0e195cb1691a683f2e8c358c25a567c2d46e2a62"
+  - filename: maps/s-b4/geometry/keyframes/000006.pcd
+    sha256: "a70c072172c34e87f3b7b5f2eb56eff18b0223b6c279dccfb3c5024a31b08b77"
+  - filename: maps/s-b4/geometry/keyframes/000007.pcd
+    sha256: "f9225684394e61a5a4cce6197e664cc1a6efe0a473604eebbb6cba708d31fad1"
+  - filename: maps/s-b4/geometry/keyframes/000008.pcd
+    sha256: "d1ca66ec9672958f4119bba72f1dff340960389dd13fb56ca4bf2e214e0e9ae3"
+  - filename: maps/s-b4/geometry/keyframes/000009.pcd
+    sha256: "f1b1fce157519077f63727ccef2cb1d120ce35ddcb9bfa49c1eb795fae5961d7"
+  - filename: maps/s-b4/geometry/keyframes/000010.pcd
+    sha256: "45336726c92b409e69c448d62c804c425ce216deccbf54b1ca79037ba702ed4a"
+  - filename: maps/s-b4/geometry/keyframes/000011.pcd
+    sha256: "fd34ca71a347621b87a2ffc2ebfaa8ae4d777f453946550a32b4ec0a71c44b0c"
+  - filename: maps/s-b4/geometry/keyframes/000012.pcd
+    sha256: "d3697519683c35afee14758f50c3d8e05d6fdf10a241cc5190aeaf75ef395a14"
+  - filename: maps/s-b4/geometry/keyframes/000013.pcd
+    sha256: "2bb8daf97e04f91e7aabf500a35961e523ba092fdde1c16a59ae55b8d7a50352"
+  - filename: maps/s-b4/geometry/keyframes/000014.pcd
+    sha256: "81ed21826b90b7f177cadac868f8e22a560ba796f4b8739ee18b804b99a9a6a2"
+  - filename: maps/s-b4/geometry/keyframes/000015.pcd
+    sha256: "6c888de99b3d09cc2505945cb333be518d439e424c3c8d7e62f968d6ffef3cf7"
+  - filename: maps/s-b4/geometry/keyframes/000016.pcd
+    sha256: "bc0a35bccd05e32ea00a1c240c0bc2f7c455f65046791c100ede9901b02b99e3"
+  - filename: maps/s-b4/geometry/keyframes/000017.pcd
+    sha256: "1d5d56c27c8a0522c569ace9e0457893b13238c3eb1c3cf1d089fe932f3ba498"
+  - filename: maps/s-b4/geometry/keyframes/000018.pcd
+    sha256: "79c3aafb89bc8c59658e92be47952d7229af1a8becf906968eca899cd78bb62d"
+  - filename: maps/s-b4/geometry/keyframes/000019.pcd
+    sha256: "515c730bf347693f9fb3e7eb0523e219ee2d7e35eb32694e98653e598b45f52e"
+  - filename: maps/s-b4/geometry/keyframes/000020.pcd
+    sha256: "39dc492d5a21263276b4533b5fcba4da9bf235023568ffb40621b8158920b8a0"
+  - filename: maps/s-b4/geometry/keyframes/000021.pcd
+    sha256: "d8b935e510915ccac5fb80620062ce0a683cb7a65cc41ec422c4fa8f2e1a3d10"
+  - filename: maps/s-b4/geometry/keyframes/000022.pcd
+    sha256: "9d0aeb196b731297667688e74c70dd60bdcf6ea4773bb287eea5c1994cc72fd8"
+  - filename: maps/s-b4/geometry/keyframes/000023.pcd
+    sha256: "d651d705eba5fda914c5b15ab76141e27756fc153452a7fda43f3b434dac3bd8"
+  - filename: maps/s-b4/geometry/keyframes/000024.pcd
+    sha256: "96310a9909c8e363c43f4c2e39c0e724ddb71544d9e4424623da748a45c47826"
+  - filename: maps/s-b4/geometry/keyframes/000025.pcd
+    sha256: "55f3d2234e78be485d0e4a24c42dd2af35df3824725e580a78d826d0af1648d7"
+  - filename: maps/s-b4/geometry/keyframes/000026.pcd
+    sha256: "15a17358aff1857e3eadef4c9887dc6b6d0cedf434ad97f71dccc2861f4cdfd4"
+  - filename: maps/s-b4/geometry/keyframes/000027.pcd
+    sha256: "d1cd081231ecd1307c2076a5990ca068502067065334fab10b03b0aaaa5d9340"
+  - filename: maps/s-b4/geometry/keyframes/000028.pcd
+    sha256: "d1bc5d8b14f8895442653185ac013fd59fa8f58d1c860e2706d46bb802e11c7e"
+  - filename: maps/s-b4/geometry/keyframes/000029.pcd
+    sha256: "44e2e6cd7c4f202c1dcd1cf9dc3d946264163234265e6c27d36b274c3366a006"
+  - filename: maps/s-b4/geometry/keyframes/000030.pcd
+    sha256: "41583937e0d92fb8896c406d98c942225370ac9c77819921fd8d0e30b06f1ce2"
+  - filename: maps/s-b4/geometry/keyframes/000031.pcd
+    sha256: "b8e06ff61c78dcc35fcf79443c5a4ccc0041788c1894fed6987c77b7c4daf8df"
+  - filename: maps/s-b4/geometry/keyframes/000032.pcd
+    sha256: "02463d90027b7ce9d381b02aa530b0f2bada91cff6f3cdf02baed77501bac5d3"
+  - filename: maps/s-b4/geometry/keyframes/000033.pcd
+    sha256: "9573f4c02eebb8a8d6bbe5d916620911f879308f8696917dc27c4cfa7b134e89"
+  - filename: maps/s-b4/geometry/keyframes/000034.pcd
+    sha256: "7a153d494eeac245ff2cf8719866d2a0eddf05219dce0de9960b7bad4a469e8c"
+  - filename: maps/s-b4/geometry/keyframes/000035.pcd
+    sha256: "ca820d2eba104bfe82ef5476b0f6c14c66004384d170eaae7ff49ecf4717d567"
+  - filename: maps/s-b4/geometry/keyframes/000036.pcd
+    sha256: "4792cb01d0392159edadefa006ea82835799165a9dc5e887dbb6d462cf5e40cd"
+  - filename: maps/s-b4/geometry/keyframes/000037.pcd
+    sha256: "f5f3d50f25f4d5c133b52268df78eb228cfdce6e633af5ecf861ba631a7d8893"
+  - filename: maps/s-b4/geometry/keyframes/000038.pcd
+    sha256: "774de048cf9f6474c8ac16d34ea9ede9938260117b873f440fa3bcd689485cbb"
+  - filename: maps/s-b4/geometry/keyframes/000039.pcd
+    sha256: "3db192af81e9bea97d71255b27ec6da322438fdab69da87e2306da720aeb1c16"
+  - filename: maps/s-b4/geometry/keyframes/000040.pcd
+    sha256: "7a3d3e31327b4e59438089ce92cccf3edb0405b2bd918d9bed4410ebb72e6ca9"
+  - filename: maps/s-b4/geometry/keyframes/000041.pcd
+    sha256: "634665f7f4aa8f5a824f344d205885fdf8dd47228a15ee45d17e1906502b96b8"
+  - filename: maps/s-b4/geometry/keyframes/000042.pcd
+    sha256: "6614e5b2c6f2433fa95db48fb0aa96ac82dbfc0978bb2708af32d7bb851c6e6b"
+  - filename: maps/s-b4/geometry/keyframes/000043.pcd
+    sha256: "3e884cf46b97166277dce721751d2d9544c16fc1f7dfecc81f02541c2ea0d573"
+  - filename: maps/s-b4/geometry/keyframes/000044.pcd
+    sha256: "0a274495a2949c1c86cf8e10deee4249c994229aee125cf433e8c5ae13af4ae7"
+  - filename: maps/s-b4/geometry/keyframes/000045.pcd
+    sha256: "7d5d941404232340277bafcab7ee7e1f1d6653258b1673c35c1312428c7c4cc4"
+  - filename: maps/s-b4/geometry/keyframes/000046.pcd
+    sha256: "ab832383ec31b51ad61d3a14e5a99ce068a5aca6c0a800e98457eb50d6e75f80"
+  - filename: maps/s-b4/geometry/keyframes/000047.pcd
+    sha256: "153e11b1a663d8ce65b4fe731b02aff3de971fcb703631feb732670a2dc7309d"
+  - filename: maps/s-b4/geometry/keyframes/000048.pcd
+    sha256: "1bc099725636da6276a458e158d99e60d70cf103c39b0943e5c6c8689659fda4"
+  - filename: maps/s-b4/geometry/keyframes/000049.pcd
+    sha256: "df93734aded962ce1128b8b76b571c75809b8bf830f3194f5f46500610b8a9cc"
+  - filename: maps/s-b4/geometry/keyframes/000050.pcd
+    sha256: "4ab26bc63e5aea4035c7547c0380dff3c964d2eb7bb6c09af226808345252467"
+  - filename: maps/s-b4/geometry/keyframes/000051.pcd
+    sha256: "028d22486a60f483f92594cb73e63dbafce7ea4e2ee5a0c5da1cfab8ada73f30"
+  - filename: maps/s-b4/geometry/keyframes/000052.pcd
+    sha256: "b8e00c4f45788c2b8598f6e667b27c3d627f20aca58be30e817a859299304ac5"
+  - filename: maps/s-b4/geometry/keyframes/000053.pcd
+    sha256: "50db935ddceed595f4f3172dbcaf9d2a9adaf8ce65d1384b91dfc5a5f0d323d7"
+  - filename: maps/s-b4/geometry/keyframes/000054.pcd
+    sha256: "79d3b27e84d5f3acaba58e9d0191539108382314d1156d650b8947c3b3703ec0"
+  - filename: maps/s-b4/geometry/keyframes/000055.pcd
+    sha256: "82a50eac19e1fdf5322a9bedd7190c050325c6ff346096bdfb0879305a3d7d47"
+  - filename: maps/s-b4/geometry/keyframes/000056.pcd
+    sha256: "51c26ccc0cb72ce44072d7121161cd175fcf9534d562864e8be43db56c79ae67"
+  - filename: maps/s-b4/geometry/keyframes/000057.pcd
+    sha256: "65e2d94aa84f7866e83ec9add7d08897c0f3fc288808444d53a642342c3c2915"
+  - filename: maps/s-b4/geometry/keyframes/000058.pcd
+    sha256: "8b24286e363aebba85140ca266abe2af4f8043a02860f931c30855817b8c3ced"
+  - filename: maps/s-b4/geometry/keyframes/000059.pcd
+    sha256: "c772f8a587dbf5753a7eb193df59aac4bd6915d421cca5bef6c5e26747f46e34"
+  - filename: maps/s-b4/geometry/keyframes/000060.pcd
+    sha256: "6f8bd021c15c48b1e8a5e09d1c0faaafbea4c7b63ef83fef3e7d9dff6e7f1aa4"
+  - filename: maps/s-b4/geometry/keyframes/000061.pcd
+    sha256: "4db1cd1781780758c63878900362fb04dbe406e8746735589e41fdf1fa918dcb"
+  - filename: maps/s-b4/geometry/keyframes/000062.pcd
+    sha256: "74ddfa85d31f9ff865a1cd9f0ff3ad4806575ba591b98516867c9066b0bdf2f5"
+  - filename: maps/s-b4/geometry/keyframes/000063.pcd
+    sha256: "b6a01b37b777cb22167b54117590d7bf9478cea30412bfe1276e1db98e09e78e"
+  - filename: maps/s-b4/geometry/keyframes/000064.pcd
+    sha256: "254fbbc92f262c87a2a671780a100c3f8f6b50f5856bbc45eecf7398d2210c52"
+  - filename: maps/s-b4/geometry/keyframes/000065.pcd
+    sha256: "d51e5611bddf4b268c9090c3b3acf6cd2d1a82209d37618ec0b2f1ad10e5f9c8"
+  - filename: maps/s-b4/geometry/keyframes/000066.pcd
+    sha256: "24fd41e1cc194489c3ca6e66a767725636fa406751c66d5fdcf6bd53dcee6582"
+  - filename: maps/s-b4/geometry/keyframes/000067.pcd
+    sha256: "e9195d2082369fb0a8dbd8b632388762451b07492fb18ece1fe346389d709027"
+  - filename: maps/s-b4/geometry/keyframes/000068.pcd
+    sha256: "6fd839f1f12946e3460d3e65854d4e9047b8431230f4705783501b50109b0805"
+  - filename: maps/s-b4/geometry/keyframes/000069.pcd
+    sha256: "63ef81d10d0ba2363b4acceceeb74b863ec16c00d36889e70091c064f4794939"
+  - filename: maps/s-b4/geometry/keyframes/000070.pcd
+    sha256: "3c193931e60bbafd0836b94a88ed4fae8c0ae47275a5faeada515612ac634620"
+  - filename: maps/s-b4/geometry/keyframes/000071.pcd
+    sha256: "4999d6b29c5721b9d83edc453df5f7b34bb77e8001dddde12955260be92a0473"
+  - filename: maps/s-b4/geometry/keyframes/000072.pcd
+    sha256: "b6ffd1b358575c7158dd0da6db592a336dc1d57cfc6c1a32b88506d145e6cdb4"
+  - filename: maps/s-b4/geometry/keyframes/000073.pcd
+    sha256: "8a8e00a0d88c1bb8032448573dc6bd81a9f4e7b457961401691f719f88313e0b"
+  - filename: maps/s-b4/geometry/keyframes/000074.pcd
+    sha256: "c703c6fba27c5e59ebdbc0d742f74a63a9947ca2b6b7bbbd7fc1c961167991fc"
+  - filename: maps/s-b4/geometry/keyframes/000075.pcd
+    sha256: "030f9a9d06397e5556f4b28d3264dc1e8fc551ee291edb59fbfbc1c4b9485352"
+  - filename: maps/s-b4/geometry/keyframes/000076.pcd
+    sha256: "303e96b6df3fc90047827cef3985ce5124d9cd96d2ba4f4c67df131cccb91256"
+  - filename: maps/s-b4/geometry/keyframes/000077.pcd
+    sha256: "43aa8497be8fc357bea67e5053f0c3106da2e019cb0294a77cd62d426d9dbc32"
+  - filename: maps/s-b4/geometry/keyframes/000078.pcd
+    sha256: "a80f685c7627818976ae358fc60303f7772dc4c52d569ecdd2d463e3f794e080"
+  - filename: maps/s-b4/geometry/keyframes/000079.pcd
+    sha256: "8e843daca49e9d1476bfd643aa7ae1d92b9ba1109c255aca1f982018524250bf"
+  - filename: maps/s-b4/geometry/keyframes/000080.pcd
+    sha256: "5cc8c8ff86a0a4121f569de70c755265a951786fafb1de5ad83302d7e8d9b0db"
+  - filename: maps/s-b4/geometry/keyframes/000081.pcd
+    sha256: "54dea6bff8e6259f8e66a88609797b49e4364ed8d12c79ea385ffef9281443a2"
+  - filename: maps/s-b4/geometry/keyframes/000082.pcd
+    sha256: "58ca853ac33c901c499b7e0920c2be94c20a99ff9e7693f155219d3bc7b436fe"
+  - filename: maps/s-b4/geometry/keyframes/000083.pcd
+    sha256: "d6d19e1e5372edb0c29854ee5c3fadc5cd07729c7c75b086c392e3ca29c03a63"
+  - filename: maps/s-b4/geometry/keyframes/000084.pcd
+    sha256: "cd87273c5dcbc7a552b9b80d7088ccf845bb014b2ad06a81db331f5b749b8159"
+  - filename: maps/s-b4/geometry/keyframes/000085.pcd
+    sha256: "0f5572d9958d2df75556632ff54a968e33f9be61fda72cae96a917d9a50c5441"
+  - filename: maps/s-b4/geometry/keyframes/000086.pcd
+    sha256: "d6035bee7b042ec80db6a4a9a4ed6f33c6f4c0adc1b6876f41de1d1c4c7aa5ac"
+  - filename: maps/s-b4/geometry/keyframes/000087.pcd
+    sha256: "447528c05ef5f26879f5ec348594af67b159a98ef57cc031606d1018eeebc2a5"
+  - filename: maps/s-b4/geometry/keyframes/000088.pcd
+    sha256: "a977179248f261c2dbff41e7d0a1e9e69f62d1f2146812811cb4c72aa0db0a9b"
+  - filename: maps/s-b4/geometry/keyframes/000089.pcd
+    sha256: "9ad1d92267952e393a701b13a9aaaa47a838bd4407f11321ec7726b47bb3a236"
+  - filename: maps/s-b4/geometry/keyframes/000090.pcd
+    sha256: "f6e84343b0482f3f84fec8eaa008f50d33d2dffcec0702b13eeb263ee7eed9b8"
+  - filename: maps/s-b4/geometry/keyframes/000091.pcd
+    sha256: "9e3cd8b392e5c83bb1b48ed7b9b31a071b7afc81cc966d656484a65ea295e8bc"
+  - filename: maps/s-b4/geometry/keyframes/000092.pcd
+    sha256: "4be8b959f3840617c7739510186eb0757a8d6c9fcc8db9617e45eda6074d1db0"
+  - filename: maps/s-b4/geometry/keyframes/000093.pcd
+    sha256: "780d88426ebae8c86a6e654cda0f9b632cade493f179fe68793f974a1846fc1f"
+  - filename: maps/s-b4/geometry/keyframes/000094.pcd
+    sha256: "e9c9638802ade703637849dd291f2d40ffc35cdb5e8ad17257dd570349b5c56d"
+  - filename: maps/s-b4/geometry/keyframes/000095.pcd
+    sha256: "fbf8d7fa013e80b0a15fffc8fcb65feb55aeb09a259a7e802051d43d87574b8a"
+  - filename: maps/s-b4/geometry/keyframes/000096.pcd
+    sha256: "2f5ecd7ef584efa4ad94e0a96e967eeaf5f217abd80b8facd9daa48889493cd0"
+  - filename: maps/s-b4/geometry/keyframes/000097.pcd
+    sha256: "fbc291b687101940a8a8ede8c0b407a3d41473321d781ec7faf2b7ae9b5db62d"
+  - filename: maps/s-b4/geometry/keyframes/000098.pcd
+    sha256: "e3ab66f738d5707738ceca701d2bde676bb94bb5786524dc9fd2cc949aecd3ef"
+  - filename: maps/s-b4/geometry/keyframes/000099.pcd
+    sha256: "80b24d11af66d2bd21e60e1dc7ed60921b504d7ca271159449751189b3c3e0bf"
+  - filename: maps/s-b4/geometry/keyframes/000100.pcd
+    sha256: "f04b2203439d3ec199a9b8ece0318a6b13ebbe11044ee5f6a9b05bd39238409a"
+  - filename: maps/s-b4/geometry/keyframes/000101.pcd
+    sha256: "7d870cf03b8905e281ad9622a3030cb18c61e55c35e998aab5b6d40529d9360e"
+  - filename: maps/s-b4/geometry/keyframes/000102.pcd
+    sha256: "816b02475344b980666a7f2dc734921998568a45674f34add4838ceef5288323"
+  - filename: maps/s-b4/geometry/keyframes/000103.pcd
+    sha256: "617c1ad8b6f6ce44566e1304216c67be49a4f828d78bceaf51e29786a6e5a8d7"
+  - filename: maps/s-b4/geometry/keyframes/000104.pcd
+    sha256: "e551a0eb8e8e16e5ac97a71338de99abb9a2219f683915dca5b23436d72e49d6"
+  - filename: maps/s-b4/geometry/keyframes/000105.pcd
+    sha256: "11a69dde7b4a19a7059aac6e288f50308d0b68a674ad935ee7f423c03c89c4dc"
+  - filename: maps/s-b4/geometry/keyframes/000106.pcd
+    sha256: "5885aa1ea13a6a22e8ce65c627005e2045906a6e5145ac0240db09f29e6f0bb9"
+  - filename: maps/s-b4/geometry/keyframes/000107.pcd
+    sha256: "0a3f95790ad24f4e1a28a765381a94d794bf0df32eb1003da1ad088072b94f7b"
+  - filename: maps/s-b4/geometry/keyframes/000108.pcd
+    sha256: "ece16b9e4aa1accd51e9c34c497fe9e7746988c4554afe79a8831421fe85ed12"
+  - filename: maps/s-b4/geometry/keyframes/000109.pcd
+    sha256: "496403b988d2d44c2efa23e475ee6083fbfe764cd12ecb6909fc57f9d88d460d"
+  - filename: maps/s-b4/geometry/keyframes/000110.pcd
+    sha256: "cc16286bdda7a5bf03e5dd64bfaba632acf5d78ec2b6de31462797d60fc28dbb"
+  - filename: maps/s-b4/geometry/keyframes/000111.pcd
+    sha256: "2f830310dc1f8bf4972989385902fbc1a22b57befc6e4cbc746fb1282c357a6b"
+  - filename: maps/s-b4/geometry/keyframes/000112.pcd
+    sha256: "4f96bae5885014ec7c5bb83125014a80ac8b6c4ff44c880300a16a8a0f04a8b9"
+  - filename: maps/s-b4/geometry/keyframes/000113.pcd
+    sha256: "a81f6f1528e490fc2754c02b8532f019dd8787d473f7453aa376b50f2d966205"
+  - filename: maps/s-b4/geometry/keyframes/000114.pcd
+    sha256: "a4ebd0af59c6fa3d98716035530f45ce18b93e26595d84d5faaa402e00052508"
+  - filename: maps/s-b4/geometry/keyframes/000115.pcd
+    sha256: "3c17dadcfc259858aba01a25cc95d2447e849214cd36edfe8410554547310e40"
+  - filename: maps/s-b4/geometry/keyframes/000116.pcd
+    sha256: "095a659b51cf83b3b4053cffb44df0024e464a2aac651d72d0d3d523199bb040"
+  - filename: maps/s-b4/geometry/keyframes/000117.pcd
+    sha256: "d9b7bf92beb5b1ab17aa0eb07c2b93b11b23a0729cf7eff4e5c3708246598109"
+  - filename: maps/s-b4/geometry/keyframes/000118.pcd
+    sha256: "cdd7e1986ac0a3e4c36109c1f22f0a30871877be33d45e5f7b82e4117591fb1a"
+  - filename: maps/s-b4/geometry/keyframes/000119.pcd
+    sha256: "e34ccb361d3b29ffead9bafc7ce3ec4e2acc67e43d64832cb6a86d31b33d6483"
+  - filename: maps/s-b4/geometry/keyframes/000120.pcd
+    sha256: "fcfc8837e5bbafb203e738991c2b7adb9e32473fe6efe890da008ce29299caaf"
+  - filename: maps/s-b4/geometry/keyframes/000121.pcd
+    sha256: "a69aa2b911646985d1ce45c8de3b4cd6ef65ed5776f55923e9b17843ea93b9b3"
+  - filename: maps/s-b4/geometry/keyframes/000122.pcd
+    sha256: "68336485d3845fa1ccdf50e67bc5ceaa232ed5c57c335a1d5a67acb212543b77"
+  - filename: maps/s-b4/geometry/keyframes/000123.pcd
+    sha256: "8c441e4f421bf6daa9386fdfca1b56135658e14b1eca34458e033f1a58c043dc"
+  - filename: maps/s-b4/geometry/keyframes/000124.pcd
+    sha256: "267569771fd6ecf2810492ffe0723ad0ff07c78e16409819e845735a493ec20c"
+  - filename: maps/s-b4/geometry/keyframes/000125.pcd
+    sha256: "c10a29a7c1b66cde528b16f2ce86f8166c6f1cddcbaa5cad14c911c56b42b9a3"
+  - filename: maps/s-b4/geometry/keyframes/000126.pcd
+    sha256: "d61172bbc1f263b56bf9038773763a47ae2afb548b2a09ae9802ecddd27e3fd2"
+  - filename: maps/s-b4/geometry/keyframes/000127.pcd
+    sha256: "0d9f0527e0bc4ad67af2f6a9057c01c4c2bfcfa853b9046c139729c9b48145cb"
+  - filename: maps/s-b4/geometry/keyframes/000128.pcd
+    sha256: "b8b428189c65466b7580548852dc85e20e831756ff38bd721ce5869e5d7516b2"
+  - filename: maps/s-b4/geometry/keyframes/000129.pcd
+    sha256: "699e906db54a36526fa1877c20e56d390922cb5247a7eb44e60c4e3d590e7b1c"
+  - filename: maps/s-b4/geometry/keyframes/000130.pcd
+    sha256: "a9e36f65ed2d7af618a90cae345c5767ee7c4a8c080abbb14e67aee1afaaef5f"
+  - filename: maps/s-b4/geometry/keyframes/000131.pcd
+    sha256: "5d3c362cc11d8b78c7508ecf4825ab7fa9a837638d91c32860f428da506a59f1"
+  - filename: maps/s-b4/geometry/keyframes/000132.pcd
+    sha256: "f794aa873be263a22b56685dd0fcded40e71ed15b112039cefb7f60d0cac2527"
+  - filename: maps/s-b4/geometry/keyframes/000133.pcd
+    sha256: "351b2ba7a9b16d853e297ee1127ee9190850df1fc9f0452769c1cfa7014a2b14"
+  - filename: maps/s-b4/geometry/keyframes/000134.pcd
+    sha256: "e2bb5a52e8fd8687ca3012112475ed74bbc3b9460ffdf46ce9df646f2312d591"
+  - filename: maps/s-b4/geometry/keyframes/000135.pcd
+    sha256: "a050a20365fcd4c2a868dfe50cf62b5f47662d33b93c25fada932fb5074aa8f3"
+  - filename: maps/s-b4/geometry/keyframes/000136.pcd
+    sha256: "79d443cbf9b93b09894e413ed0c4050bd36b72a56cfc7cbe8e4255090067496f"
+  - filename: maps/s-b4/geometry/keyframes/000137.pcd
+    sha256: "82393f0b95dd73b5192bc00e234935f6562204a22c7aa883da91fbf1c504f84b"
+  - filename: maps/s-b4/geometry/keyframes/000138.pcd
+    sha256: "9a6f4007e1bf86892c4bc924352cb54404c4043300a28784bcac1408a62f624c"
+  - filename: maps/s-b4/geometry/keyframes/000139.pcd
+    sha256: "4ac2a3cf765fa45023a63e6af03c3446f46291cffaddc1dd698f6be7c46cb883"
+  - filename: maps/s-b4/geometry/keyframes/000140.pcd
+    sha256: "bafb121a037aa1a7b74298db5ae84280c37214eb38f9d6b0a6d5655533388cba"
+  - filename: maps/s-b4/geometry/keyframes/000141.pcd
+    sha256: "1b769a2da840eb34768b7b30be03a44f67f612dbc2d056aa0d74109b182a67c7"
+  - filename: maps/s-b4/geometry/keyframes/000142.pcd
+    sha256: "2dd727d8acc14186a4015278d947e4a5d54fba8e128f18820a8bbdcdd6cc9dc3"
+  - filename: maps/s-b4/geometry/keyframes/000143.pcd
+    sha256: "2a1f30435ddf45d1cb95b45bc5e8b2b50a1e57043f9b1e414b6266668e436ebc"
+  - filename: maps/s-b4/geometry/keyframes/000144.pcd
+    sha256: "fbbda60fbc9c8e9578695c94f582f89d10c47e6bfa9df588c44d92b375b88f15"
+  - filename: maps/s-b4/geometry/keyframes/000145.pcd
+    sha256: "43b71840e04758d9ac910601071cb8e601cf5ed81ca2a402cf0feb8a282012bb"
+  - filename: maps/s-b4/geometry/keyframes/000146.pcd
+    sha256: "3ff72027c55f792b8f6c9d7135acbbf73db45bb7ff29f3a9d6758cdfc1b8c2c5"
+  - filename: maps/s-b4/geometry/keyframes/000147.pcd
+    sha256: "70ba1f62eba2153746ad84fb7c5e12477e3cb44e02a7692d9ee67256babcb51f"
+  - filename: maps/s-b4/geometry/keyframes/000148.pcd
+    sha256: "ab1fff27ae24a9823292be26ab5e5040c09dad72698eae818f780e41ee59464e"
+  - filename: maps/s-b4/geometry/keyframes/000149.pcd
+    sha256: "9c197b3b864184bcf9930c128030bcff42535b28f7726692b3a416e27698dc3c"
+  - filename: maps/s-b4/geometry/keyframes/000150.pcd
+    sha256: "d86a5ac6854f4f5c690957e7db3d56945cfb816640a4718b03606080fc054844"
+  - filename: maps/s-b4/geometry/keyframes/000151.pcd
+    sha256: "3f01f4a1f2c62921c5b8566e8e4b9454e4db294fbe79fb450145d56be3fd7cb0"
+  - filename: maps/s-b4/geometry/keyframes/000152.pcd
+    sha256: "5d41b49bdde02384ca143dca75d127aee5ef2cf09e3882193cbf87786f35cb42"
+  - filename: maps/s-b4/geometry/keyframes/000153.pcd
+    sha256: "461f40f9385e50811875989b339f7201a8b5fcbb3865d5c359e6f02812d9987f"
+  - filename: maps/s-b4/geometry/keyframes/000154.pcd
+    sha256: "d8c346120054abc1b8802dd93d1a89c66fe92795b99bdad7438fb2816de95ea3"
+  - filename: maps/s-b4/geometry/keyframes/000155.pcd
+    sha256: "7979207e7228c4e870cd2de2086d48a94a577925a206ceaee6542c6626eb87bd"
+  - filename: maps/s-b4/geometry/keyframes/000156.pcd
+    sha256: "d828664417cba2f9dcd765aed499fa4a208fd2eb20e8d0e876b15c4f233caccf"
+  - filename: maps/s-b4/geometry/keyframes/000157.pcd
+    sha256: "7115cd474d66754823084fa3ddaf63173a060b8c57905ceb4ec46f680834560f"
+  - filename: maps/s-b4/geometry/keyframes/000158.pcd
+    sha256: "b0c67e2208da8255adc2691bbfd44a3c3c72e01594075e20c33f49982e5d7d5e"
+  - filename: maps/s-b4/geometry/keyframes/000159.pcd
+    sha256: "00437dd00649c86cf868b76dcea950190adfa62a4dc49b69a4c7856d173f7a78"
+  - filename: maps/s-b4/geometry/keyframes/000160.pcd
+    sha256: "3c81a2e373750f83a23839eb946691376ed82775ca22291deca439889cbbb6b9"
+  - filename: maps/s-b4/geometry/keyframes/000161.pcd
+    sha256: "760e3c8b92b43f39cd4865b7feac9efb8a8fc76931dce3eb3425b6b397728a09"
+  - filename: maps/s-b4/geometry/keyframes/000162.pcd
+    sha256: "a9631e5e80f1114561722381a6df28ca04e7a014022dbe1220861f1e3df18650"
+  - filename: maps/s-b4/geometry/keyframes/000163.pcd
+    sha256: "da316a4f26eb764dcaaaaaee14c4786c1bb2bd59f543a359b096f204dea25b36"
+  - filename: maps/s-b4/geometry/keyframes/000164.pcd
+    sha256: "4a37efe794e815c0a9697195f545ecc9443029c275d041a1ce2ecc4aa1d582fe"
+  - filename: maps/s-b4/geometry/keyframes/000165.pcd
+    sha256: "03c6aaa6fb785473fd003931177e6f746f224fe2c5d6a49d8714293bf450b0e1"
+  - filename: maps/s-b4/geometry/keyframes/000166.pcd
+    sha256: "4c495f5a2f66436279c9288e36e75d2e66f849d8d7056e5b2d6b9384ab5397f8"
+  - filename: maps/s-b4/geometry/keyframes/000167.pcd
+    sha256: "31c2201e895495cceac7e977a8918e4ddee81734c8230face6966a39a4eff80a"
+  - filename: maps/s-b4/geometry/keyframes/000168.pcd
+    sha256: "d7f47ff54adc7dc2489d8a06d23f46c4eed22147baeb11b38ba97197631f95a8"
+  - filename: maps/s-b4/geometry/keyframes/000169.pcd
+    sha256: "81ec90b96a113c7cd00e66dfbfaf1fa7f6ffaee089bad9f70c098e6b35ab471e"
+  - filename: maps/s-b4/geometry/keyframes/000170.pcd
+    sha256: "96517822e7ddddbe26f4f2cdb5778458d729d021c2a5b0834694746f44a3b952"
+  - filename: maps/s-b4/geometry/keyframes/000171.pcd
+    sha256: "e285b8b7d09f7ebf68c5ed335569c6965e3b1b68b0af88070fb7abe696560770"
+  - filename: maps/s-b4/geometry/keyframes/000172.pcd
+    sha256: "d3303095033d935bcfb39c2d5ce16ef512eedccdfe8f0e82575092ec1bb5cc3a"
+  - filename: maps/s-b4/geometry/keyframes/000173.pcd
+    sha256: "282340290e4eb1ea160502fa2e68a7ddccf79fa629327411db473b7b3593d402"
+  - filename: maps/s-b4/geometry/keyframes/000174.pcd
+    sha256: "8b86f2e2dc72ce91eccf28de83dc2336f5480994d119a758b43dac3e2fec6dd5"
+  - filename: maps/s-b4/geometry/keyframes/000175.pcd
+    sha256: "523cecbdf1dedf8528cc991dab0decd3ee7a910b815cc4de27bceaf6536fd6e8"
+  - filename: maps/s-b4/geometry/keyframes/000176.pcd
+    sha256: "f0b6847712fdaa32e56230ebbb4daf6b37d37963cf7c7776e37df45ec7768e1a"
+  - filename: maps/s-b4/geometry/keyframes/000177.pcd
+    sha256: "22ebb6e9b09ac46933b3f90715d9e8f05b6ccf142d45fd15376833ac00172459"
+  - filename: maps/s-b4/geometry/keyframes/000178.pcd
+    sha256: "93823e9aaff1688ef1d58412809d39786ef3e0c20e3acea5b04f6fc6569b39b2"
+  - filename: maps/s-b4/geometry/keyframes/000179.pcd
+    sha256: "e5a63935e5a2175e94c834053b768615178795cbf55e4259624c77c3e57c0d47"
+  - filename: maps/s-b4/geometry/keyframes/000180.pcd
+    sha256: "01bc3aff7ecddbaf476bcdf6f94e1e6eebb1a82ed9bd523810531212fc530e64"
+  - filename: maps/s-b4/geometry/keyframes/000181.pcd
+    sha256: "35e6b5e00e4ba783c1e57f710fefce396cd7dc9311c09461c6617475232ba65b"
+  - filename: maps/s-b4/geometry/keyframes/000182.pcd
+    sha256: "47ee91a675e78e8bd40bf84802e1dd46c1c1ca3f02da025e9d9b6e0dfc1c6169"
+  - filename: maps/s-b4/geometry/keyframes/000183.pcd
+    sha256: "abc4af0b609697ead77d7d79cacbfec396318df7ab86e13f50559ec7032ea310"
+  - filename: maps/s-b4/geometry/keyframes/000184.pcd
+    sha256: "e1a468ccb17c567d034ab7c2e27f4192a61210f226cadf1dfc95b33492f20f8b"
+  - filename: maps/s-b4/geometry/keyframes/000185.pcd
+    sha256: "15d3e299896c47e16f30efbe4f60836ae3c546c070aa75428311eff64facf462"
+  - filename: maps/s-b4/geometry/keyframes/000186.pcd
+    sha256: "9277b6844fad006c0d8f2b75ac3d344020a332a2bf99d97cf42d80e61a0dade7"
+  - filename: maps/s-b4/geometry/keyframes/000187.pcd
+    sha256: "b5e4881b3da7d0664e487cd127d05f6feb9d43d15eccaadda7eaf6cfb9689993"
+  - filename: maps/s-b4/geometry/keyframes/000188.pcd
+    sha256: "603b3efa5dd416004dfd6590d20262241d3eb58ad5245acb3b1ea6eae1655a8e"
+  - filename: maps/s-b4/geometry/keyframes/000189.pcd
+    sha256: "dc393610e9baed07812753e47dc547930723274d0c48cf30829cdaf4cba8a532"
+  - filename: maps/s-b4/geometry/keyframes/000190.pcd
+    sha256: "b15501395686edc3030cb182afe467262cf66c03a763a0ee213b4e2645b65f43"
+  - filename: maps/s-b4/geometry/keyframes/000191.pcd
+    sha256: "de5568af1d2ebaf1295266cd4f0f74c6731dbcd54a696831d2c247a102b00146"
+  - filename: maps/s-b4/geometry/keyframes/000192.pcd
+    sha256: "83c3d28c0e85fc4eba7d5d3ea60daec32255985b7724099d4be12d64e2dd330f"
+  - filename: maps/s-b4/geometry/keyframes/000193.pcd
+    sha256: "24c5185b5234978797c3bdfbeedc201dea0262f4ed6ca4fecbfabf2e842ebbdc"
+  - filename: maps/s-b4/geometry/keyframes/000194.pcd
+    sha256: "b1c01df736cfd4476d278fcae1c28c5f40bf88b9d72fd7369c691e10a3d589aa"
+  - filename: maps/s-b4/geometry/keyframes/000195.pcd
+    sha256: "3511e75d0df1ad48960c425177597336532efb35d49a77e289b316c6a16a34b2"
+  - filename: maps/s-b4/geometry/keyframes/000196.pcd
+    sha256: "6f14de08bcbf173f9816688931b9386ac71f02aaf1b7362f57a5b0f7d25ab9dc"
+  - filename: maps/s-b4/geometry/keyframes/000197.pcd
+    sha256: "e7b32787a7883be7f305339ae7f393fe5d0c026d482de1807cb72cdee8fdaf70"
+  - filename: maps/s-b4/geometry/keyframes/000198.pcd
+    sha256: "2ab82c296f6515a4c8fb665656610c03f3a0aaf9056725393ee49254b55f9c8e"
+  - filename: maps/s-b4/geometry/keyframes/000199.pcd
+    sha256: "02b905555d28e930310fb5d8dda519d84153d9fc783d7cde3d48d82fbac96bd8"
+  - filename: maps/s-b4/geometry/keyframes/000200.pcd
+    sha256: "2abf2bb6ecc63bd2fe90da8281338e1ded11690884c307a3b0d09155ef63a5ed"
+  - filename: maps/s-b4/geometry/keyframes/000201.pcd
+    sha256: "cf4d7d001e7ab51c8c58352ffa5092652578f029528087b7d81f00111802bcc0"
+  - filename: maps/s-b4/geometry/keyframes/000202.pcd
+    sha256: "0dd915c2777f0dad16edb2bb58090d44cb521f51f8bd424dabae03b85c847d13"
+  - filename: maps/s-b4/geometry/keyframes/000203.pcd
+    sha256: "a24df9b2d1bcccfa1cbf32af5a4771e322cb7674d7cc7a1b2f4de485d2221acc"
+  - filename: maps/s-b4/geometry/keyframes/000204.pcd
+    sha256: "45759e9cf6d402ce0f2ec6f6d2c9711c3f8ffa1e354beab30ef252bb9e784265"
+  - filename: maps/s-b4/geometry/keyframes/000205.pcd
+    sha256: "54a911176eae27e92ef04e3634b7ad18fd4854c478eb7c15200686a5fae0162e"
+  - filename: maps/s-b4/geometry/keyframes/000206.pcd
+    sha256: "e329b24c9802faaf5b6ed2c0853193096046176069a40f3426b47c1bd06dd02e"
+  - filename: maps/s-b4/geometry/keyframes/000207.pcd
+    sha256: "ada589538b462e1d5c0ec84bc2616a2ac9d045353006d61730c71e937d223b7c"
+  - filename: maps/s-b4/geometry/keyframes/000208.pcd
+    sha256: "dd108b4dc36fb7a3556fb53dea7338dba87d348dedab9bcb778fa2dbf16c285f"
+  - filename: maps/s-b4/geometry/keyframes/000209.pcd
+    sha256: "cc62fa82d7a3c451943bb16dba7e76bc1fd1b7a0ab515ef23b347345e70f38a7"
+  - filename: maps/s-b4/geometry/keyframes/000210.pcd
+    sha256: "37eb15fbdfc5fec725b2beb78a19b727a4240865eb57ce1e84d25be047fab09a"
+  - filename: maps/s-b4/geometry/keyframes/000211.pcd
+    sha256: "1601358a82e2f987a3a2f7545ddf2e23b2bc88937b7e12ec56f0a0876fddea05"
+  - filename: maps/s-b4/geometry/keyframes/000212.pcd
+    sha256: "dfb644a5cfdc03295ff3ac6d46c2b8aa85fed05162b878b8797050b3922fc550"
+  - filename: maps/s-b4/geometry/keyframes/000213.pcd
+    sha256: "f390d2c3bdf49dbf9ed4d8a53cc26a0410b624c3599f8211a19c300fe4ab7ea6"
+  - filename: maps/s-b4/geometry/keyframes/000214.pcd
+    sha256: "dcc968a21aa5c47411a6318dd3356a66c28be010e673377b79cedd3872b0ac7c"
+  - filename: maps/s-b4/geometry/keyframes/000215.pcd
+    sha256: "0dbe5c154fa713de32d38dcf8d4ccad878fb578a8928d3edfcf45201519a604c"
+  - filename: maps/s-b4/geometry/lineage.yaml
+    sha256: "9904204ab976c61ed5deb7a0b73775568e2998239d6516a459b0a1c042fc6e84"
+  - filename: maps/s-b4/geometry/manifest.yaml
+    sha256: "c2bfe85b9cf21457487a0c98d9a6008c27500c2e56f20eb5ad03599339dfb575"
+  - filename: maps/s-b4/geometry/pose_graph.g2o
+    sha256: "a4b1dbdee765217affb1ac840fca269e36a75f292a5d5d6bb5e96d5c92d99861"
+  - filename: maps/s-b4/geometry/scan_context.bin
+    sha256: "e1af77064dc81176f04efbc48f981bc581711b899bc00cb65c0673867630d35b"
+  - filename: maps/s-b4/overlays/nav_points.yaml
+    sha256: "2c9645ccf732693173d03c98887d6538dffd9cee3515f64f5ef92d4e2c7e5afb"
+  - filename: topology/topology.yaml
+    sha256: "c96217f3fb5b875d3689f5c43d0d81163ea3e41fd7f3ba6dc13ee2af2a0978b9"

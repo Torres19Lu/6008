@@ -1,0 +1,35 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+Visualization Manager:
+  Displays:
+    - Class: rviz/Grid
+      Name: Grid
+      Enabled: true
+      Plane Cell Count: 20
+      Reference Frame: <Fixed Frame>
+    - Class: rviz/PointCloud2
+      Name: LivoxCloud
+      Enabled: true
+      Topic: /livox/lidar
+      Style: Points
+      Size (Pixels): 2
+      Decay Time: 0.1
+      Color Transformer: Intensity
+      Channel Name: intensity
+    - Class: rviz/TF
+      Name: TF
+      Enabled: true
+  Global Options:
+    Fixed Frame: mid360_link
+    Background Color: 48; 48; 48
+  Tools:
+    - Class: rviz/MoveCamera
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 12
+      Name: Current View
+Window Geometry:
+  Height: 800
+  Width: 1200

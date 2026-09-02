@@ -1,0 +1,81 @@
+# g1_locomotion parameters (loaded onto the node's private namespace).
+# Velocity limits were raised from the conservative bring-up values after the
+# live gate. Safety boundary: velocity limits in this file.
+
+domain_id: 0
+client_timeout: 0.2       # LocoClient blocking-call timeout [s]. Normal RPC
+                          # round-trip is ~2 ms (8 ms max) standing, so this keeps
+                          # a lost RPC (WiFi drop) from freezing the loop; it must
+                          # stay < command_ttl. Was 10.0 -> single drops froze the
+                          # control + status loop ~10-20 s (SDK err 3104).
+
+# Omnidirectional velocity limits. vx is asymmetric: forward faster, backward
+# slower (the robot walks backward blind). Set vx_back_max: 0 for symmetric
+# (backward also capped at vx_max).
+vx_max: 0.5               # forward [m/s]
+vx_back_max: 0.3          # backward [m/s]
+vy_max: 0.3               # [m/s]
+vyaw_max: 0.8             # [rad/s]
+
+# Slew-rate (acceleration) limits.
+ax_max: 0.5               # [m/s^2]
+ay_max: 0.5               # [m/s^2]
+ayaw_max: 1.0             # [rad/s^2]
+
+command_ttl: 0.5          # SetVelocity duration; robot self-stops after this [s]
+watchdog_timeout: 0.3     # if no active (non-zero) /cmd_vel within this, the
+                          # bridge decelerates to zero then goes SILENT (issues
+                          # no SetVelocity) so the manual remote keeps control [s]
+
+# Per-axis /cmd_vel deadzone: |axis| below this is treated as zero (no command),
+# so sub-threshold commands neither stomp the manual remote nor twitch the gait.
+# Set at/near the robot's minimum effective velocity (0.1 on all axes). 0
+# disables an axis.
+deadzone_vx: 0.10         # [m/s]
+deadzone_vy: 0.10         # [m/s]
+deadzone_vyaw: 0.10       # [rad/s]
+
+# Walk FSMs where ROS may stream velocity. The node does NOT force the FSM; the
+# operator readies the robot to walk via the remote, and controlStep streams
+# SetVelocity only while the robot is in one of these (otherwise silent, so the
+# remote keeps control and the robot stands still when idle).
+# 500 = REGULAR_WALK, 801 = WALK_RUN.
+allowed_fsm_ids: [500, 801]
+
+control_rate: 10.0        # SetVelocity issue + slew [Hz]. SetVelocity self-stops
+                          # after command_ttl (0.5 s), so ~10 Hz refresh is ample;
+                          # lower RPC load cuts WiFi congestion/loss. Was 50.0.
+joint_state_rate: 50.0    # /joint_states + /g1/body_imu publish [Hz]
+status_rate: 2.0          # /g1/loco_status (blocking FSM polls) [Hz]
+
+joint_state_frame: ""     # JointState header.frame_id (empty per REP 145)
+imu_frame: imu_in_pelvis  # /g1/body_imu header.frame_id (verify at live gate)
+
+# Motor-index -> URDF-joint map for the 23-DOF G1 (g1_23dof_mode_10.urdf).
+# index = unitree::robot::g1::JointIndex (SDK dds_wrapper/robots/g1/defines.h);
+# 23-DOF mode uses 0-12, 15-19, 22-26 (skips waist roll/pitch 13/14 and wrist
+# pitch/yaw 20/21/27/28). Derived from the SDK enum + the vendored URDF.
+joint_map:
+  - {name: left_hip_pitch_joint,    index: 0}
+  - {name: left_hip_roll_joint,     index: 1}
+  - {name: left_hip_yaw_joint,      index: 2}
+  - {name: left_knee_joint,         index: 3}
+  - {name: left_ankle_pitch_joint,  index: 4}
+  - {name: left_ankle_roll_joint,   index: 5}
+  - {name: right_hip_pitch_joint,   index: 6}
+  - {name: right_hip_roll_joint,    index: 7}
+  - {name: right_hip_yaw_joint,     index: 8}
+  - {name: right_knee_joint,        index: 9}
+  - {name: right_ankle_pitch_joint, index: 10}
+  - {name: right_ankle_roll_joint,  index: 11}
+  - {name: waist_yaw_joint,         index: 12}
+  - {name: left_shoulder_pitch_joint,  index: 15}
+  - {name: left_shoulder_roll_joint,   index: 16}
+  - {name: left_shoulder_yaw_joint,    index: 17}
+  - {name: left_elbow_joint,           index: 18}
+  - {name: left_wrist_roll_joint,      index: 19}
+  - {name: right_shoulder_pitch_joint, index: 22}
+  - {name: right_shoulder_roll_joint,  index: 23}
+  - {name: right_shoulder_yaw_joint,   index: 24}
+  - {name: right_elbow_joint,          index: 25}
+  - {name: right_wrist_roll_joint,     index: 26}

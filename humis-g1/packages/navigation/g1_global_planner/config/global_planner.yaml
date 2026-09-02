@@ -1,0 +1,54 @@
+# g1_global_planner configuration (2D A* global path planner).
+# Loaded into the node's private namespace by launch/global_planner.launch.
+# No value is hardcoded in the node; every field has a code default the node
+# falls back to and this file overrides. Keys are FLAT so the live-tunable
+# subset (the dynamic_reconfigure cfg/PlannerTuning.cfg knobs) is picked up
+# directly.
+#
+# Cost model note: OccupancyGrid cell values are:
+#   -1     = UNKNOWN (no information)
+#    0     = FREE
+#    1..99 = inflation band (cost rises toward the obstacle center)
+#   100    = LETHAL or INSCRIBED (fully blocked)
+# lethal_threshold is the cutoff: values at/above it are treated as impassable.
+# allow_unknown controls whether -1 cells are treated as impassable (false) or
+# passable (true). The A* step cost for inflation cells (1..99) is scaled by
+# inflation_cost_weight, steering the path away from obstacles.
+
+# Interfaces.
+costmap_topic:    "/nav/costmap"              # nav_msgs/OccupancyGrid input (from g1_costmap)
+goal_topic:       "/move_base_simple/goal"    # geometry_msgs/PoseStamped: RViz 2D Nav Goal
+path_topic:       "/nav/global_path"          # nav_msgs/Path output (latched)
+map_frame:        "map"
+robot_base_frame: "base_link"
+
+# Update / TF.
+update_rate:         1.0   # Hz; SLOW global failsafe + path-validity (block) check tick. Fast 20 Hz tracking + immediate obstacle reaction is g1_local_planner; replan still fires on new goal / new costmap with no path / costmap-block. A new goal ALSO triggers an immediate (event-driven) replan, so this rate is the failsafe floor, not the new-goal latency.
+transform_tolerance: 0.2   # s; TF lookup tolerance
+tf_timeout:          1.0   # s; safety: max age of a reused last-good map<-base_link TF; past this the tick skips planning instead of planning from a frozen start
+replan_fail_tolerance: 2   # consecutive same-goal plan failures tolerated before wiping the latched path to empty (keeps a still-good path through a transient block; the local planner is the fast reactor)
+
+# A* cost model.
+lethal_threshold:      99     # block inscribed(99) AND lethal(100) for travel (encoding: 99=inscribed, 100=real obstacle)
+allow_unknown:         false  # false -> unknown (-1) cells are impassable; true -> allow through unknown space
+inflation_cost_weight: 3.0    # step-cost penalty scale for inflation cells (1..98); higher = stays further from obstacles
+heuristic_weight:      1.0    # 1.0 = optimal A*; >1.0 = weighted (faster, suboptimal)
+allow_corner_cutting:  false  # false -> diagonal move requires both shared orthogonals free
+
+# Expansion cap (0 = unlimited).
+max_expansions: 0   # cap on A* node expansions; 0 = no limit; use to bound worst-case latency
+
+# Smoothing.
+smooth_enable: true   # line-of-sight post-processing: collapses straight segments (reduces waypoint count)
+
+# Goal handling.
+goal_snap_radius: 0.3   # m; if start or goal falls in a blocked cell, snap to the nearest free cell within this radius (0 = off)
+
+# Goal-local relax (Track B): within goal_relax_radius of the goal, only true
+# lethal(100) blocks; inscribed(99) becomes traversable-but-costly so a goal near an
+# obstacle is reachable. The local footprint filter is the safety guarantee there.
+goal_relax_enable: true
+goal_relax_radius: 0.6   # m; relax disk around the goal (0 = off)
+
+# Replan trigger.
+replan_on_block: true   # true -> check pathStillValid each tick and replan if the stored path is blocked by new obstacles

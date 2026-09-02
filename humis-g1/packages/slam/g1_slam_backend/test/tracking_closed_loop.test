@@ -1,0 +1,17 @@
+<launch>
+  <!-- Fresh mapping-mode node (no map_path); the test builds + saves a fixture
+       map, loads it read-only, then streams a drifting odom + matching cloud and
+       checks that the robust tracking correction keeps map->odom on the true
+       drifting offset. Faster reloc rate + generous sync slop for a quick,
+       deterministic closed loop; the robustness params stay at their defaults
+       (this is the regression guard for those defaults). -->
+  <node pkg="g1_slam_backend" type="g1_slam_backend_node" name="g1_slam_backend"
+        output="log">
+    <param name="reloc/rate" value="20.0"/>
+    <param name="reloc/search_radius" value="50.0"/>
+    <param name="sync_slop" value="0.1"/>
+    <param name="tf_publish_rate" value="50.0"/>
+  </node>
+  <test test-name="tracking_closed_loop" pkg="g1_slam_backend"
+        type="test_tracking_closed_loop" time-limit="120.0"/>
+</launch>

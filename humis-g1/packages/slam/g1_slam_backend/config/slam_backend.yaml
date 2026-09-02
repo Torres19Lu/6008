@@ -1,0 +1,132 @@
+# g1_slam_backend configuration (Scan Context + GTSAM iSAM2).
+# Loaded into the node's private namespace by launch/slam_backend.launch.
+# No value is hardcoded in the node; every field below has a code default that
+# this file overrides. Tune sc/* and icp/* per environment (the live gate).
+
+# Interfaces (consumes the front-end outputs; publishes the map->odom correction).
+odom_topic:       "/slam/frontend/odom"
+cloud_topic:      "/slam/frontend/cloud_registered"
+map_topic:        "/slam/map"
+pose_graph_topic: "/slam/pose_graph"
+keyframes_topic:  "/slam/keyframes"   # per-keyframe map clouds + sensor origins (costmap raycast)
+map_frame:        "map"
+odom_frame:       "odom"
+
+# map->odom TF broadcast.
+tf_publish_rate:     20.0    # Hz; re-broadcast rate (value updated on optimization)
+transform_tolerance: 0.1     # s; future-dated stamp so consumers can extrapolate
+
+# Loop-closure pass cadence.
+loop_closure_rate: 1.0       # Hz; how often runLoopClosureOnce() is attempted
+
+# odom+cloud time sync (front end co-stamps both with the scan end time).
+sync_queue: 100
+sync_slop:  0.05             # s; ApproximateTime tolerance
+
+# Keyframe selection (relative to the previous keyframe).
+keyframe_dist:  1.0          # m
+keyframe_angle: 0.2          # rad (~11.5 deg)
+
+# Cloud downsampling (<= 0 disables). Dense profile (kf 0.1 / map 0.1): keyframe
+# clouds dense enough for sharp ICP + a dense saved map, global map at ~costmap
+# resolution so walls stay continuous. The map assembly runs off the backend
+# mutex (snapshot under lock, transform/concat/voxel outside), so the heavier
+# point counts do not stall intake. Raise both toward 0.3/0.4 to lighten RAM/
+# bandwidth (see the plan's density analysis).
+keyframe_voxel: 0.1          # m; stored per-keyframe clouds (base_link frame), bounds map detail + ICP density
+map_voxel:      0.1          # m; assembled global map (published /slam/map)
+
+# Scan Context descriptor.
+sc:
+    num_rings:     20        # radial bins
+    num_sectors:   60        # azimuthal bins
+    max_range:     60.0      # m; points beyond are ignored (ring width = max_range/num_rings)
+    min_range:     0.5       # m; near returns ignored
+    height_offset: 2.0       # m; added to z so encoded heights are positive (0 = empty bin)
+
+# Loop detection.
+sc_min_id_gap:  30           # exclude this many recent keyframes from the loop search
+sc_dist_thresh: 0.2          # SC distance below which a loop candidate is considered (loop closure only; reloc uses inlier ratio)
+sc_knn:         20           # ring-key nearest neighbours examined (loop + reloc retrieval)
+
+# ICP geometric verification of a loop candidate.
+icp:
+    max_corr_dist:   2.0     # m; ICP correspondence cap (loop-time drift / reloc start offset)
+    max_iter:        50
+    fitness_thresh:  0.3     # accept a loop if the ICP fitness score is below this (loop closure; reloc uses inlier ratio)
+    submap_neighbors: 8      # +/- keyframes assembled around the candidate (loop + reloc). Live-gated up from 2: a larger TARGET submap gives ICP more correspondences, so loop fitness roughly halved and alignment tightened on a real map; cost is bounded by loop_voxel (the submap is re-voxeled) and loop closure runs at 1 Hz off the intake thread
+    loop_voxel:      0.4     # m; re-voxel the assembled loop TARGET submap before ICP (<=0 disables); NOT the single-keyframe source. Normalizes submap density so point-to-point ICP is not biased by overlapping keyframes, and bounds ICP cost
+
+# Pose-graph factor noise (isotropic rotation [rad] / translation [m] sigmas).
+# Loop sigmas are LOOSER than odom on purpose: trust is controlled by the Cauchy
+# robust kernel (loop/robust_c), not a tight sigma (a tight sigma only amplifies
+# any outlier loop that slips through).
+noise:
+    prior_rot:   0.0001
+    prior_trans: 0.0001
+    odom_rot:    0.05
+    odom_trans:  0.1
+    loop_rot:    0.3
+    loop_trans:  0.5
+loop_extra_iters: 5          # extra iSAM2 relinearization passes after a loop edge
+
+# Loop-closure robustness. SC + ICP-fitness produces false/degenerate loops in
+# corridors (SC is translation-invariant along the axis and yaw-invariant, so it
+# matches opposite-heading passes) and repetitive rooms; a single bad loop in a
+# plain-Gaussian graph distorts the whole map. Two layers guard against this:
+#   - robust_c: a Cauchy M-estimator down-weights an outlier loop by its residual
+#     so a false loop cannot drag the whole map. <= 0 disables (plain Gaussian).
+#   - the consistency gate (max_dt/max_dr): the front end is accurate, so a true
+#     loop's ICP measurement must agree with the odometry-chained relative pose
+#     within accumulated drift; a disagreement beyond (floor + rate * traveled
+#     path) is rejected before it ever enters the graph. Tighten the floors if
+#     false loops still distort; loosen them if a real long-range loop is rejected.
+loop:
+    robust_c:    1.0         # Cauchy kernel param for loop factors (<= 0 = plain Gaussian)
+    max_dt:      0.5         # m;  reject loop if ICP-vs-odom translation disagreement exceeds this + rate*path
+    max_dt_rate: 0.005       #     extra translation tolerance as a fraction of traveled path
+    max_dr:      0.21        # rad (~12 deg); rotation counterpart of max_dt
+    max_dr_rate: 0.0005      # rad per m of traveled path
+
+# Relocalization (localization-only). Active after /slam/load_map (or the
+# map_path launch arg): the loaded map is frozen and the node tracks map->odom
+# against it. Acquisition is global Scan Context (top num_candidates ICP-verified);
+# tracking is local scan-to-map ICP. Acceptance is by geometric inlier ratio
+# (min_inlier), which rejects the wrong-but-low-fitness matches that plague
+# complex multi-feature scenes. Raise min_inlier if it false-locks; lower it (or
+# raise inlier_dist) if a correct pose is rejected. Watch the node log for the
+# per-attempt sc/inlier/fitness numbers.
+reloc:
+    rate:           5.0      # Hz; localization step runs on its own timer (decoupled from scan rate), heavy work off the mutex
+    search_radius:  20.0     # m; tracking submap radius around the predicted pose (also the use_guess radius)
+    track_rebuild_dist: 2.0  # m; rebuild (vs reuse) the cached tracking submap once the predicted pose moves this far
+    lost_streak:    5        # consecutive failed tracking attempts before dropping the lock and re-acquiring (global SC)
+    acquire_stride: 1        # run global SC every Nth reloc tick while ACQUIRING (raise to lighten CPU on large maps)
+    min_inlier:     0.5      # required inlier fraction (live points within inlier_dist of the map) to accept a relocalization
+    inlier_dist:    0.3      # m; a live point within this of the map counts as an inlier
+    num_candidates: 5        # SC candidates ICP-verified per acquire (the best inlier ratio wins)
+    # Tracking robustness. The per-tick scan-to-map ICP is NOT applied raw to
+    # map->odom: near a dominant planar surface (a table/monitor the robot faces
+    # at close range) that ICP is under-constrained and slides, while the
+    # front-end odom is smooth and trustworthy. The correction is (1) projected
+    # off the unobservable DOFs of the registration point-to-plane Hessian
+    # (degeneracy), (2) clamped per tick, (3) low-passed by a gain, and (4)
+    # rejected (coast on odom) when the RAW jump is implausibly large. Tune on a
+    # localization bag; raise reject/clamp/floor to be stricter, lower corr_gain
+    # to smooth harder. Setting floor/ratio/clamp/reject to 0 disables each layer
+    # (corr_gain 1.0 == legacy overwrite behavior).
+    obs_eig_floor:  0.05     # eigenvalue floor on the mean-normalized info (trans block in [0,1]); below this a DOF is unobservable and its correction is dropped. <=0 disables
+    obs_eig_ratio:  0.0      # relative floor: eig < ratio*max_eig is also unobservable. <=0 disables
+    corr_gain:      0.4      # fraction of the (projected, clamped) correction applied per tick (low-pass); 1.0 = apply all
+    max_step_trans: 0.10     # m;   clamp the per-tick translation correction. <=0 disables
+    max_step_rot:   0.05     # rad; clamp the per-tick rotation correction. <=0 disables
+    reject_trans:   0.50     # m;   reject (coast on odom) if the RAW correction translation exceeds this. <=0 disables. (clamp+gain already bound a legit catch-up to ~max_step_trans*corr_gain per tick; this only kills clear teleports)
+    reject_rot:     0.20     # rad; reject if the RAW correction rotation exceeds this. <=0 disables
+
+# Localization tracking observability.
+track_normal_k:     10       # nearest neighbours for live-scan normal estimation (point-to-plane info / degeneracy)
+
+# Service names. Absolute so they sit under /slam regardless of node namespace.
+save_map_service:   "/slam/save_map"
+load_map_service:   "/slam/load_map"
+relocalize_service: "/slam/relocalize"

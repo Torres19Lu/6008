@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<!--
+  g1_nav end-to-end integration gate (rostest).
+
+  Brings up the real g1_nav_node against a SINGLE python mock node that plays
+  every upstream the node talks to (a static map->base_link TF; the four
+  services it calls; a scripted /g1_local_planner/state publisher; a
+  /nav/cmd_vel_track publisher), plus the navigate_to action client and the
+  /nav/state verifier. The mock reacts to the node's outputs (it is
+  event-driven, not sleep-fragile) so the four scenarios are deterministic.
+
+  The node runs with SMALL FSM timeouts so a scenario reaches its
+  terminal state in a few seconds, a LARGE stuck_window so the no-progress
+  watchdog never fires on the static TF, and a LARGE goal_timeout so a goal is
+  never aborted by the per-goal wall clock. auto_arm stays true so the
+  arm/halt service calls are exercised. These <param> overrides are loaded
+  AFTER nav.yaml, so they win (the structural topic/service/frame names come
+  from nav.yaml; only the tunable knobs are overridden here).
+-->
+<launch>
+  <node name="g1_nav" pkg="g1_nav" type="g1_nav_node" output="screen">
+    <!-- Structural params (topics, services, frames, rate) from the package YAML. -->
+    <rosparam command="load" file="$(find g1_nav)/config/nav.yaml"/>
+
+    <!-- Test timeouts (override the YAML; later wins). Small so each scenario
+         terminates in a few seconds; the mock drives the local_state script
+         to walk the FSM through its transitions. -->
+    <param name="rate"            value="20.0"/>
+    <param name="auto_arm"        value="true"/>
+
+    <!-- FSM timeouts. -->
+    <param name="plan_timeout"    value="2.0"/>
+    <param name="replan_timeout"  value="0.5"/>
+    <param name="no_path_grace"   value="0.3"/>
+    <param name="goal_timeout"    value="60.0"/>
+
+    <!-- Blocked-goal RETRY: enabled with a SHORT budget so the
+         blocked/unreachable scenarios reach RETRY and then terminate in a
+         few seconds instead of the 120 s production default. -->
+    <param name="retry_budget"          value="2.0"/>
+    <param name="retry_replan_interval" value="0.3"/>
+
+    <!-- Watchdog: large window so the static-TF no-progress detector never
+         interferes with these scenarios. -->
+    <param name="stuck_window"    value="30.0"/>
+    <param name="stuck_dist"      value="0.10"/>
+
+    <!-- Faster service connect so a scenario does not stall on a slow mock
+         advertise (the mock advertises before the test methods run). -->
+    <param name="service_connect_timeout" value="1.0"/>
+  </node>
+
+  <!-- The single mock node = all mock upstreams + action client + verifier.
+       It owns the scenarios and the asserts; time-limit guards a hang. -->
+  <test test-name="nav_integration_test" pkg="g1_nav"
+        type="nav_integration_test.py" time-limit="120.0"/>
+</launch>

@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>g1_nav</name>
+  <version>0.0.1</version>
+  <description>Navigation FSM orchestrator for the Unitree G1: accepts a NavigateTo action goal, coordinates g1_costmap / g1_global_planner / g1_local_planner, gates /cmd_vel, runs recovery, and reports progress. Thin coordinator over already-separate ROS nodes; does not re-implement planning or tracking. ROS-free core (g1_nav_core: FSM + recovery sequencer + progress watchdog) + thin ROS node.</description>
+  <maintainer email="66817439+rohanhong@users.noreply.github.com">Rohan</maintainer>
+  <author email="66817439+rohanhong@users.noreply.github.com">Rohan</author>
+  <license>Proprietary</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>actionlib</depend>
+  <depend>actionlib_msgs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>g1_msgs</depend>
+  <depend>dynamic_reconfigure</depend>
+
+  <exec_depend>g1_costmap</exec_depend>
+  <exec_depend>g1_global_planner</exec_depend>
+  <exec_depend>g1_local_planner</exec_depend>
+  <exec_depend>g1_locomotion</exec_depend>
+
+  <test_depend>rostest</test_depend>
+</package>

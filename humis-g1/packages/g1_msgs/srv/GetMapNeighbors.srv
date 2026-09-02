@@ -1,0 +1,5 @@
+string map_name          # "" = active map
+---
+bool success
+string message
+g1_msgs/Gateway[] neighbors

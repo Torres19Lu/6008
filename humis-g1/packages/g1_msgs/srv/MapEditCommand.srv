@@ -1,0 +1,9 @@
+string command           # delete_obstacle|trim_keyframe|crop|set_metadata|status|undo|redo|discard|save
+string map_name          # "" = active map
+string key               # metadata key (when set_metadata)
+string value             # metadata value (when set_metadata)
+uint32 keyframe_id       # when trim_keyframe
+geometry_msgs/Point[] points  # obstacle voxel point(s) or crop polygon vertices
+---
+bool success
+string message

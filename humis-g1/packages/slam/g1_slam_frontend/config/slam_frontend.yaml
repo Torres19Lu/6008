@@ -1,0 +1,75 @@
+# g1_slam_frontend configuration for the Unitree G1 Mid-360.
+# Loaded into the node's private namespace by launch/slam_frontend.launch.
+# Mid-360 base values are a standard Livox Mid-360 estimator profile; the `frames`
+# block and the odom->base_link compose are humis-g1 additions.
+
+common:
+    lid_topic:  "/livox/lidar"        # Livox CustomMsg (bring up g1_lidar with xfer_format:=1)
+    imu_topic:  "/livox/imu"
+    time_sync_en: false
+    time_offset_lidar_to_imu: 0.0
+
+# humis-g1: frames for the odom->base_link compose. lidar_frame is the URDF
+# Mid-360 frame; base_frame is the REP-105 base; odom is this node's parent out.
+frames:
+    odom_frame:  "odom"
+    base_frame:  "base_link"
+    lidar_frame: "mid360_link"
+    # Real Livox cloud frame -> URDF mid360_link frame. The Mid-360 is physically
+    # inverted vs the URDF mount (cloud is Z-down, URDF mid360_link is Z-up), so a
+    # 180deg-about-X reconciliation makes odom->base_link upright. Applied only in
+    # the compose; does NOT change the URDF. Identity = no inversion.
+    cloud_to_lidar_R: [ 1.0,  0.0,  0.0,
+                        0.0, -1.0,  0.0,
+                        0.0,  0.0, -1.0 ]
+
+preprocess:
+    lidar_type: 1                     # 1 = Livox CustomMsg path (avia_handler)
+    scan_line: 4                      # Mid-360
+    blind: 0.5
+
+mapping:
+    acc_cov: 0.1
+    gyr_cov: 0.1
+    b_acc_cov: 0.0001
+    b_gyr_cov: 0.0001
+    fov_degree: 360
+    det_range: 100.0
+    extrinsic_est_en: false           # Mid-360 lidar-IMU extrinsic is a datasheet constant
+    extrinsic_T: [ -0.011, -0.02329, 0.04412 ]   # Mid-360 lidar -> internal IMU extrinsic
+    extrinsic_R: [ 1.0, 0.0, 0.0,
+                   0.0, 1.0, 0.0,
+                   0.0, 0.0, 1.0 ]   # IMU and cloud are aligned (identity); confirmed by tracking
+
+# Top-level estimator/map params (read at the node root by the ported node).
+feature_extract_enable: false
+point_filter_num: 1    # keep every return (was 3): more ground points pin Z; costs CPU
+max_iteration: 3
+filter_size_surf: 0.5
+filter_size_map: 0.5
+cube_side_length: 1000.0
+runtime_pos_log_enable: false
+
+# humis-g1: rear-sector range clip (follow mode). When enabled, returns in a
+# base_link-frame sector centered on the robot's rear (-X) and beyond max_range are
+# dropped before the estimator and map, so a person following the robot is not fed
+# in. The sector is pinned to the walking direction (base_link via the URDF TF), not
+# the sensor, so waist_yaw does not swing it - this needs the base_link TF, so launch
+# with start_state (g1_locomotion + g1_description); without that TF it no-ops (keeps
+# all points) with a throttled warning. ON by default (operator-follow is the normal
+# mode); note it discards real far returns behind the robot (a rear map hole past
+# max_range).
+rear_clip:
+    enable:     true      # default on; set rear_clip:=false at launch to keep rear far returns
+    sector_deg: 120.0     # total rear sector width [deg], centered on -X (base_link)
+    max_range:  2.0       # m; in-sector points beyond this are dropped
+
+publish:
+    path_en: true                     # /path in odom, for RViz trajectory
+    scan_publish_en: true             # /cloud_registered (remapped to /slam/frontend/cloud_registered)
+    dense_publish_en: true
+    scan_bodyframe_pub_en: false      # off: this node publishes no sensor-frame TF for it
+
+pcd_save:
+    pcd_save_en: false                # map persistence is handled by the backend
+    interval: -1

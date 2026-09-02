@@ -1,0 +1,56 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+  - Class: rviz/Tool Properties
+    Name: Tool Properties
+Visualization Manager:
+  Global Options:
+    Fixed Frame: map
+    Frame Rate: 30
+    Background Color: 48; 48; 48
+  Displays:
+    - Class: rviz/Grid
+      Name: Grid
+      Enabled: true
+      Plane Cell Count: 40
+      Cell Size: 1
+    - Class: rviz/TF
+      Name: TF
+      Enabled: true
+      Show Names: true
+    # The local rolling costmap the MPC uses for obstacle avoidance.
+    - Class: rviz/Map
+      Name: LocalCostmap
+      Enabled: true
+      Topic: /nav/local_costmap
+      Color Scheme: costmap
+      Alpha: 0.7
+      Draw Behind: true
+    # The global path produced by g1_global_planner that the MPC tracks.
+    - Class: rviz/Path
+      Name: GlobalPath
+      Enabled: true
+      Topic: /nav/global_path
+      Color: 25; 255; 0
+      Line Style: Billboards
+      Line Width: 0.05
+    # The MPC predicted trajectory (local plan) published each control cycle.
+    - Class: rviz/Path
+      Name: LocalPlan
+      Enabled: true
+      Topic: /nav/local_plan
+      Color: 255; 165; 0
+      Line Style: Billboards
+      Line Width: 0.03
+  Tools:
+    - Class: rviz/MoveCamera
+    - Class: rviz/FocusCamera
+    # Publishes geometry_msgs/PoseStamped on /move_base_simple/goal (the node's
+    # goal_topic): click a goal in the map to send a navigation target.
+    - Class: rviz/SetGoal
+      Topic: /move_base_simple/goal
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 30
+      Name: Current View

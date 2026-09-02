@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<!--
+  g1_global_planner: 2D A* global path planner for the G1.
+
+  Inputs : /nav/costmap (nav_msgs/OccupancyGrid, latched, from g1_costmap),
+           /move_base_simple/goal (geometry_msgs/PoseStamped, RViz 2D Nav Goal),
+           TF map<-base_link (robot pose).
+  Output : /nav/global_path (nav_msgs/Path, latched, map frame).
+
+  This node only CONSUMES topics + TF; it owns no TF. The launch offers opt-in
+  args to bring up its upstream (all default off):
+    start_costmap  : bring up g1_costmap (the /nav/costmap source).
+    start_slam     : forwarded to g1_costmap (g1_slam_backend).
+    start_frontend : forwarded through to g1_slam_frontend.
+    start_lidar    : forwarded through to g1_lidar.
+    start_state    : forwarded through to g1_locomotion + g1_description.
+    map_path       : forwarded to the backend (load + localize at startup).
+    rviz           : launch RViz with the global planner view (this launch owns rviz).
+    interface      : network interface for the robot (default: G1_NETWORK_INTERFACE env).
+
+  Usage:
+    roslaunch g1_global_planner global_planner.launch                             # costmap + goal already publishing
+    roslaunch g1_global_planner global_planner.launch rviz:=true                  # + viz
+    roslaunch g1_global_planner global_planner.launch start_costmap:=true         # bring up costmap too
+    roslaunch g1_global_planner global_planner.launch start_costmap:=true start_slam:=true map_path:=/path/to/map rviz:=true
+    roslaunch g1_global_planner global_planner.launch start_costmap:=true start_slam:=true start_frontend:=true start_lidar:=true start_state:=true rviz:=true
+-->
+<launch>
+  <arg name="rviz"           default="false"/>
+  <arg name="start_costmap"  default="false"/>   <!-- bring up g1_costmap (/nav/costmap source) -->
+  <arg name="start_slam"     default="false"/>   <!-- forwarded to g1_costmap: g1_slam_backend -->
+  <arg name="start_frontend" default="false"/>   <!-- forwarded through: g1_slam_frontend odometry -->
+  <arg name="start_lidar"    default="false"/>   <!-- forwarded through: g1_lidar in CustomMsg mode -->
+  <arg name="start_state"    default="false"/>   <!-- forwarded through: g1_locomotion + g1_description -->
+  <arg name="map_path"       default=""/>        <!-- forwarded to the backend: load + localize at startup -->
+  <arg name="interface"      default="$(optenv G1_NETWORK_INTERFACE)"/>
+
+  <!-- Topic wiring this node executes on request. The standalone default matches the
+       node's own default; a coordinator (e.g. g1_nav) overrides it so this node consumes
+       the coordinator's forwarded goal instead of the raw RViz goal. roslaunch honors an
+       <arg> passed to an <include> but silently drops a <remap> child of <include>. -->
+  <arg name="goal_topic"     default="/move_base_simple/goal"/>  <!-- geometry_msgs/PoseStamped goal in -->
+
+  <!-- Optional upstream: the costmap node (and, through it, the SLAM stack).
+       This launch owns rviz and does NOT pass rviz down to the costmap. -->
+  <include if="$(arg start_costmap)"
+           file="$(find g1_costmap)/launch/costmap.launch">
+    <arg name="start_slam"     value="$(arg start_slam)"/>
+    <arg name="start_frontend" value="$(arg start_frontend)"/>
+    <arg name="start_lidar"    value="$(arg start_lidar)"/>
+    <arg name="start_state"    value="$(arg start_state)"/>
+    <arg name="map_path"       value="$(arg map_path)"/>
+    <arg name="interface"      value="$(arg interface)"/>
+  </include>
+
+  <node name="g1_global_planner" pkg="g1_global_planner"
+        type="g1_global_planner_node" output="screen" required="true">
+    <rosparam command="load"
+              file="$(find g1_global_planner)/config/global_planner.yaml"/>
+    <!-- Override the YAML goal default (later param wins) so a coordinator can route
+         this node without reaching in with a remap. Default leaves standalone unchanged. -->
+    <param name="goal_topic" value="$(arg goal_topic)"/>
+  </node>
+
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" name="global_planner_rviz"
+        args="-d $(find g1_global_planner)/config/global_planner.rviz"/>
+</launch>

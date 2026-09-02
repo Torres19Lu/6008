@@ -1,0 +1,5 @@
+string query
+string map_name          # "" = active map
+---
+bool found
+g1_msgs/NavPoint point

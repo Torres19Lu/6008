@@ -1,0 +1,66 @@
+# g1_nav configuration (navigation FSM orchestrator).
+# Loaded into the node's private namespace by launch/nav.launch.
+# No value is hardcoded in the node; every field has a code default the node
+# falls back to and this file overrides. Keys are FLAT so the live-tunable
+# subset (the dynamic_reconfigure cfg/NavTuning.cfg knobs) is picked up directly.
+#
+# Param groups:
+#   Interfaces      -- topic names (STRUCTURAL; change requires restart)
+#   Services        -- service names (STRUCTURAL)
+#   Frames          -- TF frame ids (STRUCTURAL)
+#   Rates / TF      -- timer rate and TF lookup tolerance (STRUCTURAL)
+#   FSM timeouts    -- LIVE (also in cfg/NavTuning.cfg)
+#   Watchdog        -- progress stuck detector params (LIVE)
+#
+# STRUCTURAL params are not exposed via dynamic_reconfigure (they would need a
+# restart to take effect). LIVE params can be tuned at runtime via rqt_reconfigure.
+
+# Interfaces (topic names).
+goal_topic:        "/move_base_simple/goal"      # geometry_msgs/PoseStamped input (RViz 2D Nav Goal)
+local_state_topic: "/g1_local_planner/state"     # std_msgs/Int8 input (local planner ControllerState)
+track_cmd_topic:   "/nav/cmd_vel_track"          # geometry_msgs/Twist input (local planner output, remapped)
+loco_status_topic: "/g1/loco_status"             # g1_msgs/LocoStatus input
+cmd_vel_topic:     "/cmd_vel"                    # geometry_msgs/Twist output (sole /cmd_vel writer)
+goal_out_topic:    "/nav/goal"                   # geometry_msgs/PoseStamped output (forwarded goal)
+state_topic:       "/nav/state"                  # std_msgs/Int8 output (NavState)
+
+# Services.
+enable_service: "/g1_local_planner/enable"       # std_srvs/SetBool (arm/disarm local planner)
+arm_service:    "/g1/arm"                        # std_srvs/Trigger (arm locomotion)
+halt_service:   "/g1/halt"                       # std_srvs/Trigger (halt locomotion)
+
+# Action server name.
+action_name: "navigate_to"                       # NavigateTo action name
+
+# Frames.
+map_frame:        "map"
+robot_base_frame: "base_link"
+
+# Rates / TF (STRUCTURAL).
+rate:                    20.0   # Hz; control loop cadence
+transform_tolerance:      0.2   # s; TF lookup timeout
+tf_timeout:               1.0   # s; safety: max age of a reused last-good map<-base_link TF; past this g1_nav has "no pose" and forces zero /cmd_vel (never drive open-loop on a frozen pose)
+feedback_rate:            5.0   # Hz; action feedback publish rate (0 = disable)
+track_cmd_ttl:            0.5   # s; stale-relay TTL: ignore track_cmd older than this
+local_state_ttl:          0.5   # s; ignore /g1_local_planner/state older than this (local planner stalled/died)
+goal_ack_grace:           0.15  # s; after a new goal, ignore local_state this long so a stale (previous-goal) TRACKING/GOAL_REACHED cannot drive a premature transition
+service_connect_timeout:  0.1   # s; time to wait for a service to appear before skipping
+
+# FSM timeouts + auto_arm (LIVE via dynamic_reconfigure).
+plan_timeout:   5.0    # s: PLAN without TRACKING -> RETRY (or RECOVER if !retry_enabled)
+replan_timeout: 3.0    # s: REPLAN without a fresh path -> RETRY (or RECOVER if !retry_enabled)
+goal_timeout:   9999.0 # s: per-goal wall time for the ACTIVE phases (PLAN/TRACK/REPLAN/RECOVER) -> ABORTED_TIMEOUT (0 = unbounded). RETRY ignores this and is bounded by retry_budget.
+no_path_grace:  1.0    # s: TRACK must see NO_PATH this long before -> REPLAN (debounce)
+auto_arm:       true   # emit arm on goal accept + halt on terminal/cancel
+
+# Blocked-goal RETRY (LIVE via dynamic_reconfigure). The sole soft-failure handler:
+# PLAN/REPLAN timeout and TRACK STUCK / no_progress hold position and re-forward the
+# goal on a cadence for up to retry_budget before failing (ABORTED_BLOCKED_TIMEOUT),
+# resuming the moment a path opens.
+retry_budget:          120.0   # s: RETRY hold+replan budget (<= 0 = unbounded)
+retry_replan_interval: 1.0     # s: RETRY re-forward-goal cadence
+
+# ProgressWatchdog (LIVE via dynamic_reconfigure).
+stuck_window: 8.0    # s: rolling window; sized so the local stall-latch (~0.75 s) finishes before no_progress fires
+stuck_dist:   0.10   # m: min net displacement in the window to count as progress
+

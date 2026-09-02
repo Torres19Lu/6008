@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<!--
+  g1_nav: navigation FSM orchestrator for the G1.
+
+  g1_nav is the SOLE writer of /cmd_vel and the SOLE goal authority, but it only
+  COORDINATES: each sub-node owns the capability to route its own I/O, exposed as
+  topic args on its launch. g1_nav forwards the coordinated topic names down as
+  <arg> (NOT <remap>): roslaunch silently DROPS a <remap> child of <include> (it
+  only honors <arg> and <env> there), so the wiring must flow as args the sub-launch
+  applies to its own node.
+
+  Topic-coordination strategy:
+    - The local planner's cmd_topic is set to /nav/cmd_vel_track so g1_nav muxes it
+      via its track_cmd subscription, and its goal_topic to /nav/goal so it consumes
+      only the goal g1_nav forwards (not the raw RViz goal).
+    - The global planner's goal_topic is set to /nav/goal for the same reason.
+    - g1_nav's OWN goal_topic stays /move_base_simple/goal (NOT overridden) so the
+      RViz 2D Nav Goal tool reaches g1_nav directly.
+
+  Opt-in args (all default off except where noted):
+    start_local      : bring up g1_local_planner (the MPC tracker).
+    start_global     : bring up g1_global_planner (publishes /nav/global_path).
+    start_costmap    : bring up g1_costmap (publishes /nav/costmap + /nav/local_costmap).
+    start_slam       : forwarded to g1_costmap (g1_slam_backend).
+    start_frontend   : forwarded through to g1_slam_frontend.
+    start_lidar      : forwarded through to g1_lidar.
+    start_state      : forwarded through to g1_locomotion + g1_description.
+    start_locomotion : bring up g1_locomotion (/cmd_vel -> robot, /g1/arm, /g1/halt).
+    map_path         : forwarded to the backend (load + localize at startup).
+    interface        : network interface for the robot (default: G1_NETWORK_INTERFACE env).
+    rviz             : launch RViz with the g1_nav view.
+
+  Usage:
+    # g1_nav only (sub-nodes already running separately):
+    roslaunch g1_nav nav.launch
+
+    # Full offline nav stack with RViz (no robot; no locomotion):
+    roslaunch g1_nav nav.launch start_local:=true start_global:=true start_costmap:=true \
+      start_slam:=true map_path:=/path/to/map rviz:=true
+
+    # Full live stack (all sub-nodes + robot):
+    roslaunch g1_nav nav.launch start_local:=true start_global:=true start_costmap:=true \
+      start_slam:=true start_frontend:=true start_lidar:=true start_state:=true \
+      start_locomotion:=true map_path:=/path/to/map rviz:=true
+-->
+<launch>
+  <arg name="start_local"      default="false"/>  <!-- bring up g1_local_planner -->
+  <arg name="start_global"     default="false"/>  <!-- bring up g1_global_planner -->
+  <arg name="start_costmap"    default="false"/>  <!-- bring up g1_costmap -->
+  <arg name="start_slam"       default="false"/>  <!-- forwarded: g1_slam_backend -->
+  <arg name="start_frontend"   default="false"/>  <!-- forwarded: g1_slam_frontend -->
+  <arg name="start_lidar"      default="false"/>  <!-- forwarded: g1_lidar -->
+  <arg name="start_state"      default="false"/>  <!-- forwarded: g1_locomotion + g1_description -->
+  <arg name="start_locomotion" default="false"/>  <!-- bring up g1_locomotion -->
+  <arg name="map_path"         default=""/>       <!-- forwarded to backend: load + localize -->
+  <arg name="interface"        default="$(optenv G1_NETWORK_INTERFACE)"/>
+  <arg name="rviz"             default="false"/>  <!-- launch RViz with nav view -->
+
+  <!-- g1_nav node: ALWAYS launched. Reads all params from nav.yaml.
+       goal_topic stays /move_base_simple/goal (NOT remapped) so RViz 2D Nav Goal
+       reaches this node directly. Only the included sub-nodes get their goal
+       remapped to /nav/goal. -->
+  <node name="g1_nav" pkg="g1_nav" type="g1_nav_node" output="screen">
+    <rosparam command="load" file="$(find g1_nav)/config/nav.yaml"/>
+  </node>
+
+  <!-- Optional upstream: the local planner (MPC tracker).
+       Two args make g1_nav the sole /cmd_vel writer and sole goal authority:
+         cmd_topic  = /nav/cmd_vel_track  (muxed by g1_nav's track_cmd sub)
+         goal_topic = /nav/goal           (only g1_nav forwards goals here)
+       The local planner's launch applies these to its own node. start_costmap,
+       start_global, start_slam, rviz all suppressed (this launch owns them). The
+       local planner's enable gate defaults OFF so g1_nav enables it per goal. -->
+  <include if="$(arg start_local)"
+           file="$(find g1_local_planner)/launch/local_planner.launch">
+    <arg name="start_costmap"  value="false"/>
+    <arg name="start_global"   value="false"/>
+    <arg name="start_slam"     value="false"/>
+    <arg name="rviz"           value="false"/>
+    <arg name="cmd_topic"      value="/nav/cmd_vel_track"/>
+    <arg name="goal_topic"     value="/nav/goal"/>
+  </include>
+
+  <!-- Optional upstream: the global planner (A* path planner).
+       goal_topic = /nav/goal so it receives the goal only when g1_nav forwards it
+       (the global planner's launch applies it to its own node). start_costmap,
+       start_slam, rviz suppressed. -->
+  <include if="$(arg start_global)"
+           file="$(find g1_global_planner)/launch/global_planner.launch">
+    <arg name="start_costmap"  value="false"/>
+    <arg name="start_slam"     value="false"/>
+    <arg name="start_frontend" value="false"/>
+    <arg name="start_lidar"    value="false"/>
+    <arg name="start_state"    value="false"/>
+    <arg name="map_path"       value="$(arg map_path)"/>
+    <arg name="interface"      value="$(arg interface)"/>
+    <arg name="goal_topic"     value="/nav/goal"/>
+  </include>
+
+  <!-- Optional upstream: the costmap (provides /nav/local_costmap, /nav/costmap,
+       and the /g1_costmap/clear_costmap service). -->
+  <include if="$(arg start_costmap)"
+           file="$(find g1_costmap)/launch/costmap.launch">
+    <arg name="start_slam"     value="$(arg start_slam)"/>
+    <arg name="start_frontend" value="$(arg start_frontend)"/>
+    <arg name="start_lidar"    value="$(arg start_lidar)"/>
+    <arg name="start_state"    value="$(arg start_state)"/>
+    <arg name="map_path"       value="$(arg map_path)"/>
+    <arg name="interface"      value="$(arg interface)"/>
+  </include>
+
+  <!-- Optional upstream: locomotion bridge (provides /cmd_vel -> robot,
+       /g1/arm, /g1/halt, /g1/loco_status). Forward interface. -->
+  <include if="$(arg start_locomotion)"
+           file="$(find g1_locomotion)/launch/locomotion.launch">
+    <arg name="interface" value="$(arg interface)"/>
+  </include>
+
+  <!-- Optional RViz: this launch owns its rviz instance. -->
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" name="g1_nav_rviz"
+        args="-d $(find g1_nav)/config/nav.rviz"/>
+</launch>

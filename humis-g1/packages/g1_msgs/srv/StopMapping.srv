@@ -1,0 +1,7 @@
+bool save
+string new_name          # "" = keep current name
+string label             # human label for this save (lineage); "" => auto
+---
+bool success
+string message
+string saved_label       # the lineage label written

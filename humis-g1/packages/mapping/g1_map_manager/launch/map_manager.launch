@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<!--
+  g1_map_manager: map management + map-aware navigation bring-up.
+
+  ALWAYS launches the manager (lifecycle + state + /map_nav/navigate_to action) and
+  the keyframe overlay relay (/slam/keyframes -> /slam/keyframes_filtered). Upstreams
+  are opt-in (default off) so this launch composes with a stack that is already up.
+
+  Edits reach the costmap's static layer through the relay: when start_costmap is set,
+  the costmap's keyframes_topic param is pointed at /slam/keyframes_filtered (override
+  after the include; later document order wins). The manager delegates single-map legs
+  to g1_nav's /navigate_to action and does NOT fight g1_nav for /move_base_simple/goal.
+
+  Usage:
+    roslaunch g1_map_manager map_manager.launch
+    roslaunch g1_map_manager map_manager.launch start_slam:=true start_costmap:=true \
+      start_nav:=true rviz:=true
+-->
+<launch>
+  <arg name="maps_root"      default=""/>       <!-- "" = the g1_maps share dir -->
+  <arg name="start_slam"     default="false"/>  <!-- g1_slam_backend (map + keyframes) -->
+  <arg name="start_frontend" default="false"/>  <!-- forwarded: g1_slam_frontend odometry -->
+  <arg name="start_lidar"    default="false"/>  <!-- forwarded: g1_lidar -->
+  <arg name="start_state"    default="false"/>  <!-- forwarded: g1_locomotion + g1_description -->
+  <arg name="start_costmap"  default="false"/>  <!-- g1_costmap (consumes the filtered keyframes) -->
+  <arg name="start_nav"      default="false"/>  <!-- g1_nav (single-map navigation legs) -->
+  <arg name="start_local"    default="false"/>  <!-- forwarded to g1_nav: local planner (MPC tracker) -->
+  <arg name="start_global"   default="false"/>  <!-- forwarded to g1_nav: global planner (A*) -->
+  <arg name="start_locomotion" default="false"/>  <!-- forwarded to g1_nav: locomotion bridge (robot) -->
+  <arg name="start_fetch"    default="false"/>  <!-- run g1_maps/fetch_maps.py once -->
+  <arg name="map_path"       default=""/>       <!-- forwarded to the backend -->
+  <arg name="interface"      default="$(optenv G1_NETWORK_INTERFACE)"/>
+  <arg name="rviz"           default="false"/>
+
+  <!-- Optional install-time asset fetch (HF + sha256). -->
+  <node if="$(arg start_fetch)" pkg="g1_maps" type="fetch_maps.py"
+        name="fetch_maps" output="screen"/>
+
+  <!-- ALWAYS: the manager + the keyframe overlay relay. -->
+  <node name="g1_map_manager" pkg="g1_map_manager" type="g1_map_manager_node"
+        output="screen">
+    <rosparam command="load" file="$(find g1_map_manager)/config/map_manager.yaml"/>
+    <param name="maps_root" value="$(arg maps_root)"/>
+  </node>
+  <node name="g1_keyframe_overlay" pkg="g1_map_manager"
+        type="g1_keyframe_overlay_node" output="screen">
+    <param name="maps_root" value="$(arg maps_root)"/>
+  </node>
+
+  <!-- Optional upstream: SLAM backend alone (when not using the costmap path). -->
+  <include if="$(eval start_slam and not start_costmap)"
+           file="$(find g1_slam_backend)/launch/slam_backend.launch">
+    <arg name="start_frontend" value="$(arg start_frontend)"/>
+    <arg name="start_lidar"    value="$(arg start_lidar)"/>
+    <arg name="start_state"    value="$(arg start_state)"/>
+    <arg name="map_path"       value="$(arg map_path)"/>
+    <arg name="interface"      value="$(arg interface)"/>
+  </include>
+
+  <!-- Optional upstream: costmap (forwards start_slam to the backend). Edits reach
+       the static layer by pointing keyframes_topic at the relay output. -->
+  <include if="$(arg start_costmap)"
+           file="$(find g1_costmap)/launch/costmap.launch">
+    <arg name="start_slam"     value="$(arg start_slam)"/>
+    <arg name="start_frontend" value="$(arg start_frontend)"/>
+    <arg name="start_lidar"    value="$(arg start_lidar)"/>
+    <arg name="start_state"    value="$(arg start_state)"/>
+    <arg name="map_path"       value="$(arg map_path)"/>
+    <arg name="interface"      value="$(arg interface)"/>
+  </include>
+  <param if="$(arg start_costmap)" name="g1_costmap/keyframes_topic"
+         value="/slam/keyframes_filtered"/>
+
+  <!-- Optional upstream: g1_nav + its planners. The manager delegates legs to g1_nav's
+       /navigate_to action; g1_nav keeps /move_base_simple/goal for the RViz 2D Nav Goal
+       tool. The costmap/slam are owned by THIS launch (suppressed here); the local +
+       global planners and the locomotion bridge are forwarded so the stack actually
+       plans, tracks, and (live) drives. nav's own rviz is suppressed; we own one. -->
+  <include if="$(arg start_nav)" file="$(find g1_nav)/launch/nav.launch">
+    <arg name="start_local"      value="$(arg start_local)"/>
+    <arg name="start_global"     value="$(arg start_global)"/>
+    <!-- g1_locomotion (the disarmed /cmd_vel bridge) is ALSO the robot-state node the
+         SLAM chain brings up via start_state. They are one node, so forward the bridge
+         only when start_state is off, else g1_locomotion would be launched twice. -->
+    <arg name="start_locomotion" value="$(eval start_locomotion and not start_state)"/>
+    <arg name="start_costmap"    value="false"/>
+    <arg name="start_slam"       value="false"/>
+    <arg name="interface"        value="$(arg interface)"/>
+    <arg name="rviz"             value="false"/>
+  </include>
+
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" name="g1_map_manager_rviz"
+        args="-d $(find g1_map_manager)/config/map_manager.rviz"/>
+</launch>

@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>g1_global_planner</name>
+  <version>0.0.1</version>
+  <description>2D A* global path planner for the Unitree G1 in the humis-g1 stack: searches the fused costmap (/nav/costmap) for a collision-free, inflation-aware path from the robot to an RViz goal, line-of-sight smoothed, and publishes it as /nav/global_path for the local MPC planner.</description>
+  <maintainer email="66817439+rohanhong@users.noreply.github.com">Rohan</maintainer>
+  <author email="66817439+rohanhong@users.noreply.github.com">Rohan</author>
+  <license>Proprietary</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>dynamic_reconfigure</depend>
+
+  <exec_depend>g1_costmap</exec_depend>
+
+  <test_depend>rostest</test_depend>
+</package>

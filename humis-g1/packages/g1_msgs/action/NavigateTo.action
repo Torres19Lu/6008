@@ -1,0 +1,34 @@
+# Goal
+uint8 GOAL_POSE=0               # explicit target_pose; supported by g1_nav and map_manager
+uint8 GOAL_OBJECT_ID=1          # reserved (g1_semantic_map); REJECTED until a resolver exists
+uint8 GOAL_NAV_POINT=2          # named nav point; resolved by map_manager, REJECTED by g1_nav
+uint8 goal_type
+geometry_msgs/PoseStamped target_pose   # used when goal_type==GOAL_POSE (map frame)
+uint32 object_id                        # reserved (GOAL_OBJECT_ID)
+string nav_point_name                   # used when goal_type==GOAL_NAV_POINT (map_manager resolves)
+string map_name                         # target map; "" = current map (manager resolves)
+float32 transition_wait                 # per-crossing dwell at the gateway before the switch, seconds; <0 = use the map_manager default
+float32 xy_tolerance                    # reserved per-goal override (0 -> server default); local planner owns the actual stop
+float32 yaw_tolerance                   # reserved per-goal override (0 -> server default)
+---
+# Result
+uint8 OUTCOME_SUCCEEDED=0
+uint8 OUTCOME_ABORTED_NO_PATH=1
+uint8 OUTCOME_ABORTED_STUCK=2
+uint8 OUTCOME_ABORTED_TIMEOUT=3
+uint8 OUTCOME_ABORTED_RECOVERY_EXHAUSTED=4
+uint8 OUTCOME_PREEMPTED=5
+uint8 OUTCOME_REJECTED=6                 # unsupported goal_type / invalid pose
+uint8 OUTCOME_ABORTED_BLOCKED_TIMEOUT=7  # blocked goal: no path within retry_budget (RETRY)
+bool success
+uint8 outcome
+geometry_msgs/PoseStamped final_pose
+float32 distance_remaining
+string message
+---
+# Feedback
+uint8 state                              # FSM state enum (see above)
+geometry_msgs/PoseStamped current_pose
+float32 distance_remaining
+uint8 recovery_attempt                   # 0 when not recovering
+string status

@@ -1,0 +1,19 @@
+# Request: RESERVED MANUAL FSM switch for the G1 (user-only; the node NEVER
+# switches the FSM automatically). Allowed (case-insensitive):
+# walk_motion | lock_standing | damping | zero_torque.
+#   walk_motion   -> LocoClient.Start()      (FSM 500) balanced; accepts velocity.
+#                    Does NOT arm streaming - call /g1/arm to enable /cmd_vel.
+#   lock_standing -> LocoClient.StandUp()    (FSM 4)   WARNING: no balance control
+#   damping       -> LocoClient.Damp()       (FSM 1)   WARNING: no balance control
+#   zero_torque   -> LocoClient.ZeroTorque() (FSM 0)   WARNING: no balance control
+# WARNING: zero_torque/damping/lock_standing have NO balance control, so the
+# robot FALLS unless physically supported; they also disarm ROS streaming. They
+# are NOT a stop. To stop while upright, use /g1/halt (soft-stop: one zero
+# velocity then silent + disarm), or stop publishing /cmd_vel (the node
+# decelerates to zero then goes silent, remote keeps control). Enable streaming
+# with /g1/arm; the node streams /cmd_vel only while armed AND the robot is in a
+# walk FSM (allowed_fsm_ids, e.g. 500/801).
+string mode
+---
+bool success
+string message

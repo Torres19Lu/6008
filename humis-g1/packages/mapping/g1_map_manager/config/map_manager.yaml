@@ -1,0 +1,37 @@
+# g1_map_manager node params. Every key has a code default the node overrides; this
+# YAML is the canonical override. Flat keys, read from the node's private namespace.
+
+maps_root: ""                 # filesystem root of the maps tree; "" -> the g1_maps share dir
+state_rate: 5.0               # Hz; /map_manager/state latched publish rate
+
+# Cross-map transition.
+transition_wait: 3.0          # s; default gateway dwell before the switch (per-goal NavigateTo.transition_wait < 0 uses this)
+reloc_seed_timeout: 5.0       # s; grace for a seeded relocalize after load (waits for a live scan)
+reloc_global_timeout: 15.0    # s; global-fallback relocalize budget before a safe abort
+transition_timeout: 30.0      # s; whole cross-map switch budget
+
+# Nav-point anchoring.
+nearest_anchor_max_dist: 5.0  # m; reject authoring a nav point with no keyframe within this
+
+# Offline editing.
+delete_radius: 0.15           # m; obstacle_mask deletes points within this of a clicked voxel
+
+# Bounded local history (Approach C safety net): last-N per file, auto-pruned.
+overlay_history_keep: 5       # overlays/.history per overlay file (nav_points, edits)
+topology_history_keep: 5      # topology/.history
+snapshot_auto_keep: 2         # auto pre-incremental snapshots kept (manual kept until deleted)
+
+# Action / topic / service names.
+map_nav_action: "/map_nav/navigate_to"          # the single operator-facing entry
+nav_action: "/navigate_to"                      # g1_nav action delegated to for single-map legs
+state_topic: "/map_manager/state"
+keyframe_poses_topic: "/slam/keyframe_poses"     # backend full keyframe poses (anchoring)
+# Backend services orchestrated in process.
+load_map_service: "/slam/load_map"
+save_map_service: "/slam/save_map"
+relocalize_service: "/slam/relocalize"
+begin_incremental_service: "/slam/begin_incremental"
+reset_service: "/slam/reset"
+
+# Gateway capture service (served by this node).
+gateway_capture_service: "map_manager/gateway_capture"

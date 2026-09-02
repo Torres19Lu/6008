@@ -1,0 +1,129 @@
+# g1_local_planner configuration (linear MPC local trajectory tracker).
+# Loaded into the node's private namespace by launch/local_planner.launch.
+# No value is hardcoded in the node; every field has a code default the node
+# falls back to and this file overrides. Keys are FLAT so the live-tunable
+# subset (the dynamic_reconfigure cfg/LocalPlannerTuning.cfg knobs) is picked
+# up directly.
+#
+# Param groups:
+#   Interfaces      -- topic names and frame ids
+#   Update / TF     -- timer rate and TF lookup tolerance
+#   Enable gate     -- whether cmd_vel is armed at startup
+#   Horizon         -- STRUCTURAL (static); do not change without rebuilding
+#   Speed / limits  -- reference speed, velocity box, slew limits (LIVE)
+#   Goal            -- tolerances and alignment radius (LIVE)
+#   Cost weights    -- QP objective weights (LIVE)
+#   Obstacle        -- CostmapView normalisation parameters (STATIC)
+
+# Interfaces.
+path_topic:       "/nav/global_path"          # nav_msgs/Path input (from g1_global_planner)
+costmap_topic:    "/nav/local_costmap"         # nav_msgs/OccupancyGrid input (from g1_costmap)
+goal_topic:       "/move_base_simple/goal"     # geometry_msgs/PoseStamped (RViz 2D Nav Goal)
+cmd_topic:        "/cmd_vel"                   # geometry_msgs/Twist output (g1_locomotion)
+local_plan_topic: "/nav/local_plan"            # nav_msgs/Path output (predicted MPC trajectory)
+map_frame:        "map"
+robot_base_frame: "base_link"
+
+# Update / TF.
+update_rate:         20.0  # Hz; control loop cadence (dt_control; MPC dt is separate)
+transform_tolerance: 0.2   # s; TF lookup timeout
+tf_timeout:          1.0   # s; safety: max age of a reused last-good map<-base_link TF; past this the node emits STUCK (zero cmd) instead of tracking / latching GOAL_REACHED on a frozen pose
+
+# Enable gate: cmd_vel starts as zero until ~enable service is called.
+enable_on_start: false
+
+# Prediction horizon (STRUCTURAL; not live via dynamic_reconfigure).
+horizon: 20    # number of prediction steps N
+dt:      0.1   # MPC step duration in seconds; note dt_mpc != dt_control
+
+# Reference speed.
+v_ref: 0.5     # nominal cruise speed (m/s) for arc-length reference
+
+# Velocity box constraints.
+max_vx:  0.5   # maximum forward speed  (m/s)
+min_vx: -0.3   # minimum forward speed; allows slow reverse (m/s)
+max_vy:  0.3   # maximum lateral speed (m/s, symmetric)
+max_wz:  0.8   # maximum yaw rate (rad/s, symmetric)
+
+# Slew / acceleration limits: |u_k - u_{k-1}| <= acc * dt.
+acc_lim_x:     0.5  # max longitudinal accel/decel (m/s^2); matched to g1_locomotion ax_max for honest braking
+acc_lim_y:     1.0  # max lateral accel/decel      (m/s^2)
+acc_lim_theta: 1.5  # max yaw angular accel        (rad/s^2)
+
+# Goal tolerances.
+xy_goal_tolerance:  0.05  # position tolerance for GOAL_REACHED (m)
+yaw_goal_tolerance: 0.03  # heading tolerance for GOAL_REACHED (rad)
+
+# Terminal behaviour.
+goal_align_radius: 0.5  # switch heading ref to goal yaw + decelerate within this radius (m)
+
+# Clean termination near obstacles (Track A; LIVE). Judge GOAL_REACHED against the
+# path endpoint and latch on a no-progress stall near it, so a goal close to an
+# obstacle finishes cleanly instead of wandering at the standoff boundary.
+reach_on_path_end:    true   # false -> judge the raw goal (legacy behaviour)
+reach_stall_progress: 0.01   # m; min reduction in dist-to-path-end per window to count as progress
+reach_stall_cycles:   15     # consecutive no-progress near-end cycles before latching (15 @ 20 Hz = 0.75 s)
+reach_stall_radius:   0.15   # m; near-end gate for the stall latch (decoupled from goal_align_radius; ~3x xy_goal_tolerance; reaches the footprint-limited stall pose near a table)
+reach_goal_gap:       0.15   # m; if path endpoint is within this of the raw goal, judge + track the RAW goal (else fall back to the path endpoint)
+
+# Terminal obstacle relax (Track A; LIVE). A teleop-safe goal can sit in the costmap
+# inscribed halo (cost 99); near such a REACHABLE goal, scale the MPC soft obstacle
+# weight so tracking + the hard footprint safety filter drive the final approach in,
+# instead of limit-cycling at the inflation boundary. radius 0 disables; scale 1 = off.
+goal_obstacle_relax_radius: 0.6   # m; suppression active within this distance of a reachable goal
+goal_obstacle_relax_scale:  0.0   # w_obstacle multiplier inside the radius (0 = full suppression)
+
+# Speed regulation (LIVE): shape the arc-length reference speed so the robot
+# decelerates in turns, into the goal, and during large heading changes.
+a_lat_max:          0.5   # max lateral accel for the curvature regulator (m/s^2)
+a_decel:            0.2   # approach decel-to-stop rate (m/s^2); lower = gentler/earlier slow-down into the goal (<= acc_lim_x)
+curv_lookahead:     0.6   # forward arc length scanned for path curvature (m)
+heading_slow_start: 0.3   # heading error where translation slowdown begins (rad)
+heading_slow_full:  1.0   # heading error at which the speed factor hits the floor (rad)
+heading_slow_floor: 0.0   # lower bound on the heading speed factor [0,1]
+v_min_move:         0.05  # floor for the cruise regulators (excludes the approach ramp) (m/s)
+
+# Cost weights (tuned in the offline-gate tuning pass).
+# TRACKING-DOMINANT, mirroring the reference DWA (path_distance_bias=32,
+# goal_distance_bias=24, occdist_scale=0.02). The global path is the PRIMARY avoider;
+# the obstacle term is a SOFT secondary nudge so the MPC hugs the inflation-aware
+# global path (which legitimately runs through the inflation band on tight maps)
+# instead of being shoved meters off it and stalling.
+w_pos:           10.0   # path-tracking position weight
+w_yaw:            2.0   # heading tracking weight
+w_obstacle:       2.0   # linearised obstacle penalty (push down-gradient); SOFT, secondary
+w_effort:         0.1   # control effort weight (penalises ||u_k||^2)
+w_lateral:        2.0   # strafe penalty (penalises vy_k^2)
+w_rate:           0.5   # control rate weight (penalises ||u_k - u_{k-1}||^2)
+w_pos_terminal:  30.0   # terminal position weight (step N)
+w_yaw_terminal:   8.0   # terminal heading weight  (step N)
+
+# Oscillation control (Track C; LIVE). Damp the warm-start obstacle nominal toward the
+# reference to break the limit cycle, and suppress strafe near obstacles.
+obstacle_nominal_damping: 0.5  # blend warm-start nominal toward the reference (0=off, 1=full)
+vy_suppress_cost:         0.5  # max footprint normalised cost gating strafe suppression
+vy_suppress_scale:        0.6  # factor applied to vy near obstacles (1.0 = off); relaxed from 0.3 to ease near-obstacle strafing
+
+# Obstacle cost normalisation (used by CostmapView; static, not live).
+lethal_cost:              1.0   # normalised cost assigned to OccupancyGrid value 100 or out-of-window cells
+treat_unknown_as_obstacle: true # true -> unknown (-1) cells treated as lethal_cost
+
+# Footprint: the robot collision body is a lateral array of equal-radius
+# body-frame circles (STATIC; not live). Defaults model a 0.5 m wide x 0.3 m deep
+# body: radius 0.15 m (0.3 m diameter), 5 circles spanning the 0.5 m width.
+footprint_circle_radius: 0.15   # m; half the forward depth (0.3 m diameter)
+footprint_circle_count:  5      # circles when deriving centers
+footprint_lateral_width: 0.5    # m (Y); body width the circle row spans
+footprint_forward_depth: 0.30   # m (X); nominal 2*circle_radius (documentation)
+# footprint_circle_y: []        # optional explicit body-frame Y centers (overrides the derivation)
+
+# Safety filter: post-MPC guarantee that the footprint never overlaps a lethal
+# cell. Verifies the applied command's swept footprint and gracefully scales / brakes.
+# enabled + brake_margin are LIVE (dynamic_reconfigure); the rest are static.
+safety_filter_enabled:    true  # veto/scale the command so the footprint never overlaps lethal (LIVE)
+safety_lethal_value:      100   # costmap value treated as collision (lethal+inscribed)
+safety_brake_margin:      0.05  # m; braking-distance margin on the clear distance (LIVE)
+safety_footprint_collision_margin: 0.0  # m; dilate each footprint circle for the hard check (0 = pure footprint) (LIVE)
+safety_swept_subsamples:  2     # interpolated footprint checks between predicted poses
+safety_treat_unknown_as_obstacle: true  # true -> unknown (-1) cells block the footprint
+control_dt:               0.05  # s; control period (1/update_rate) used by the brake model

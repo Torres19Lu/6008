@@ -1,0 +1,22 @@
+<launch>
+  <!-- Brings up the full description (RSP + base_footprint), an animated joint
+       source, and a fake odom->base_link, then runs the TF assertions. -->
+  <include file="$(find g1_description)/launch/description.launch"/>
+
+  <node pkg="g1_description" type="fake_joint_states" name="fake_joint_states">
+    <param name="animated_joint" value="waist_yaw_joint"/>
+    <param name="amplitude" value="1.0"/>
+    <param name="frequency_hz" value="1.0"/>
+  </node>
+
+  <!-- Dynamic odom->base_link on /tf (repeated at 100 ms), matching how the SLAM
+       frontend publishes odom at runtime. A latched tf2_ros static_transform_publisher
+       (/tf_static) is unreliable here: with two latched /tf_static publishers
+       (robot_state_publisher + this), a tf2 listener can miss one at connection and
+       never get it again, so base_footprint_publisher never sees odom->base_link. -->
+  <node pkg="tf" type="static_transform_publisher" name="fake_odom"
+        args="0 0 0.793 0 0 0 odom base_link 100"/>
+
+  <test test-name="test_tf_tree" pkg="g1_description" type="test_tf_tree"
+        time-limit="60.0"/>
+</launch>

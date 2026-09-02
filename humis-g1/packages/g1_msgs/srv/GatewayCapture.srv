@@ -1,0 +1,12 @@
+# Operator-driven automatic gateway capture (served by map_manager).
+string command          # begin|load|commit|nudge|yaw|save|discard|status
+string to_map           # required for begin; validated against the pending capture
+string label            # gateway label (begin)
+float64[] values        # nudge:[dx,dy]  yaw:[dyaw]
+---
+bool success
+string message
+string state            # idle|begun|loaded|staged
+g1_msgs/Gateway staged              # valid when state == staged
+g1_msgs/RelocQuality quality_from   # from-side capture, best-effort
+g1_msgs/RelocQuality quality_to     # to-side relocalize, valid after commit

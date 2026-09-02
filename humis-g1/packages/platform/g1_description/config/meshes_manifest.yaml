@@ -1,0 +1,61 @@
+# Manifest pinning the g1_description meshes to a specific Hugging Face commit.
+# These STL meshes are NOT committed to git (see meshes/ in .gitignore);
+# scripts/fetch_meshes.py downloads them from HF and verifies each sha256.
+# To update: push new meshes to HF, then bump hf_revision + per-file sha256 here.
+hf_repo: humis-g1/g1-description-meshes
+hf_repo_type: dataset
+hf_revision: 5413b6a23a7dc35e15c2d108b4ee0309e1c82040
+dest_dir: meshes   # relative to the g1_description package root
+files:
+  - filename: head_link.STL
+    sha256: 005fb67fbd3eff94aa8bf4a6e83238174e9f91b6721f7111594322f223724411
+  - filename: left_ankle_pitch_link.STL
+    sha256: d49e3abc6f5b12e532062cd575b87b5ef40cd2a3fc18f54a1ca5bba4f773d51d
+  - filename: left_ankle_roll_link.STL
+    sha256: c4092af943141d4d9f74232f3cfa345afc6565f46a077793b8ae0e68b39dc33f
+  - filename: left_elbow_link.STL
+    sha256: fa752198accd104d5c4c3a01382e45165b944fbbc5acce085059223324e5bed3
+  - filename: left_hip_pitch_link.STL
+    sha256: 4725168105ee768ee31638ef22b53f6be2d7641bfd7cfefe803488d884776fa4
+  - filename: left_hip_roll_link.STL
+    sha256: 91f25922ee8a7c3152790051bebad17b4d9cd243569c38fe340285ff93a97acf
+  - filename: left_hip_yaw_link.STL
+    sha256: a16d88aa6ddac8083aa7ad55ed317bea44b1fa003d314fba88965b7ed0f3b55b
+  - filename: left_knee_link.STL
+    sha256: 8d92b9e3d3a636761150bb8025e32514c4602b91c7028d523ee42b3e632de477
+  - filename: left_shoulder_pitch_link.STL
+    sha256: f0d1cfd02fcf0d42f95e678eeca33da3afbcc366ffba5c052847773ec4f31d52
+  - filename: left_shoulder_roll_link.STL
+    sha256: fb9df21687773522598dc384f1a2945c7519f11cbc8bd372a49170316d6eee88
+  - filename: left_shoulder_yaw_link.STL
+    sha256: 1aa97e9748e924336567992181f78c7cd0652fd52a4afcca3df6b2ef6f9e712e
+  - filename: left_wrist_roll_rubber_hand.STL
+    sha256: e81030abd023bd9e4a308ef376d814a2c12d684d8a7670c335bbd5cd7809c909
+  - filename: logo_link.STL
+    sha256: 8571a0a19bc4916fa55f91449f51d5fdefd751000054865a842449429d5f155b
+  - filename: pelvis_ver0529.STL
+    sha256: 9a249feb95d632aa648cd07757b2ccce6da36723875e7630fa75d66a4ae8f036
+  - filename: right_ankle_pitch_link.STL
+    sha256: 15be426539ec1be70246d4d82a168806db64a41301af8b35c197a33348c787a9
+  - filename: right_ankle_roll_link.STL
+    sha256: 4b66222ea56653e627711b56d0a8949b4920da5df091da0ceb343f54e884e3a5
+  - filename: right_elbow_link.STL
+    sha256: 1be925d7aa268bb8fddf5362b9173066890c7d32092c05638608126e59d1e2ab
+  - filename: right_hip_pitch_link.STL
+    sha256: e4f3c99d7f4a7d34eadbef9461fc66e3486cb5442db1ec50c86317d459f1a9c6
+  - filename: right_hip_roll_link.STL
+    sha256: 4c254ef66a356f492947f360dd931965477b631e3fcc841f91ccc46d945d54f6
+  - filename: right_hip_yaw_link.STL
+    sha256: e479c2936ca2057e9eb2f7dff6c189b7419d7b8484dea0b298cbb36a2a6aa668
+  - filename: right_knee_link.STL
+    sha256: 63c4008449c9bbe701a6e2b557b7a252e90cf3a5abcf54cee46862b9a69f8ec8
+  - filename: right_shoulder_pitch_link.STL
+    sha256: 24cdb387e0128dfe602770a81c56cdce3a0181d34d039a11d1aaf8819b7b8c02
+  - filename: right_shoulder_roll_link.STL
+    sha256: 962b97c48f9ce9e8399f45dd9522e0865d19aa9fd299406b2d475a8fc4a53e81
+  - filename: right_shoulder_yaw_link.STL
+    sha256: a0b76489271da0c72461a344c9ffb0f0c6e64f019ea5014c1624886c442a2fe5
+  - filename: right_wrist_roll_rubber_hand.STL
+    sha256: 0729aff1ac4356f9314de13a46906267642e58bc47f0d8a7f17f6590a6242ccf
+  - filename: torso_link_23dof_rev_1_0.STL
+    sha256: 3cd0d56fde14b73c1623304684805029971c4f84b596f9914e823ca70a107fd2

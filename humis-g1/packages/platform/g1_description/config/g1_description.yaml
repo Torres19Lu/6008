@@ -1,0 +1,5 @@
+# base_footprint_publisher parameters (loaded into the node's private namespace).
+odom_frame: odom
+base_frame: base_link
+footprint_frame: base_footprint
+publish_rate: 50.0   # Hz

@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<!--
+  g1_slam_frontend: LiDAR-inertial odometry for the G1.
+
+  Inputs : /livox/lidar (Livox CustomMsg) + /livox/imu
+  Outputs: /slam/frontend/odom (nav_msgs/Odometry, odom->base_link),
+           /slam/frontend/cloud_registered (PointCloud2, odom frame),
+           TF odom->base_link (composed through the live waist_yaw joint).
+
+  This node only CONSUMES topics/TF; the launch offers opt-in args to bring up the
+  upstreams it needs (all default off):
+    start_lidar : g1_lidar in CustomMsg mode (xfer_format:=1) -> /livox/lidar + /livox/imu.
+    start_state : g1_locomotion (real /joint_states incl. waist_yaw, read from the robot's
+                  LowState) + g1_description (robot_state_publisher -> the URDF TF tree).
+                  Coupled on purpose: robot_state_publisher is useless without the joint
+                  source. g1_locomotion boots latched-safe (disarmed, issues no velocity).
+  The odom->base_link compose looks up mid360_link->base_link from that TF; on failure it
+  reuses the last good transform, or identity until the first is seen (throttled warning).
+
+  Usage:
+    roslaunch g1_slam_frontend slam_frontend.launch                                          # everything already up / bag
+    roslaunch g1_slam_frontend slam_frontend.launch start_lidar:=true rviz:=true             # sensor + viz, state up elsewhere
+    roslaunch g1_slam_frontend slam_frontend.launch start_lidar:=true start_state:=true rviz:=true   # full live stack
+    roslaunch g1_slam_frontend slam_frontend.launch start_lidar:=true start_state:=true rear_clip:=false  # keep rear far returns (disable the default follow-sector clip)
+-->
+<launch>
+  <arg name="rviz" default="false"/>
+  <arg name="start_lidar" default="false"/>                 <!-- bring up g1_lidar in CustomMsg mode -->
+  <arg name="start_state" default="false"/>                 <!-- bring up g1_locomotion (real /joint_states) + g1_description (URDF TF tree) -->
+  <arg name="rear_clip" default="true"/>                    <!-- drop the rear follow-sector (person following the robot); on by default, needs the base_link TF (start_state); rear_clip:=false to disable -->
+  <arg name="interface" default="$(optenv G1_NETWORK_INTERFACE)"/>
+
+  <!-- Optional: Mid-360 in CustomMsg mode for SLAM (g1_lidar default stays PointCloud2). -->
+  <include if="$(arg start_lidar)" file="$(find g1_lidar)/launch/lidar.launch">
+    <arg name="xfer_format" value="1"/>
+    <arg name="interface" value="$(arg interface)"/>
+  </include>
+
+  <!-- Optional: the robot-state-to-TF chain. g1_locomotion publishes real /joint_states
+       (incl. waist_yaw) from the robot's LowState; g1_description turns it into the URDF
+       TF tree (mid360_link->base_link). Coupled: robot_state_publisher needs the joints. -->
+  <include if="$(arg start_state)" file="$(find g1_locomotion)/launch/locomotion.launch">
+    <arg name="interface" value="$(arg interface)"/>
+  </include>
+  <include if="$(arg start_state)" file="$(find g1_description)/launch/description.launch"/>
+
+  <node name="g1_slam_frontend" pkg="g1_slam_frontend" type="g1_slam_frontend_node"
+        output="screen" required="true">
+    <rosparam command="load" file="$(find g1_slam_frontend)/config/slam_frontend.yaml"/>
+    <!-- override the YAML default (loaded above) so an experiment can flip it at launch -->
+    <param name="rear_clip/enable" value="$(arg rear_clip)"/>
+    <remap from="/Odometry"          to="/slam/frontend/odom"/>
+    <remap from="/cloud_registered"  to="/slam/frontend/cloud_registered"/>
+    <remap from="/path"              to="/slam/frontend/path"/>
+  </node>
+
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" name="slam_frontend_rviz"
+        args="-d $(find g1_slam_frontend)/config/slam_frontend.rviz"/>
+</launch>

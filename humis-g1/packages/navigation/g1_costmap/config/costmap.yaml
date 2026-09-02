@@ -1,0 +1,138 @@
+# g1_costmap configuration (2D layered occupancy costmap, ground-relative model).
+# Loaded into the node's private namespace by launch/costmap.launch. No value is
+# hardcoded in the node; every field has a code default the node falls back to
+# and this file overrides. Keys are FLAT so the live-tunable subset (the
+# dynamic_reconfigure cfg/CostmapTuning.cfg knobs) is picked up directly.
+
+# Interfaces.
+keyframes_topic:  "/slam/keyframes"                 # g1_msgs/KeyframeCloudArray: per-keyframe map clouds + origins (static layer, raycast)
+cloud_topic:      "/slam/frontend/cloud_registered" # live PointCloud2 (odom frame): dynamic obstacles
+costmap_topic:    "/nav/costmap"                     # published nav_msgs/OccupancyGrid, inflated (planner; rviz/Map "costmap" scheme shows the inflation)
+costmap_raw_topic: "/nav/costmap_raw"                # OccupancyGrid: 3-state occupancy, no inflation (pre-inflation grid map; rviz/Map "map" scheme = white/black/gray)
+costmap_prob_topic: "/nav/costmap_prob"              # OccupancyGrid: static occupancy probability (0..100), no inflation
+costmap_change_prob_topic: "/nav/change_prob"   # OccupancyGrid: dynamic change-evidence probability (0..100, -1 neutral), no inflation; off-by-default diagnostic
+map_frame:        "map"
+lidar_frame:      "mid360_link"                      # dynamic raycast origin + lidar-plane band top (TF map<-mid360_link)
+left_foot_frame:  "left_ankle_roll_link"             # stance-foot ground reference (TF)
+right_foot_frame: "right_ankle_roll_link"
+
+# Grid.
+resolution: 0.1       # m / cell (match the SLAM map detail)
+margin:     1.0       # m of padding around the static-map XY bounds
+xy_clip_pct: 0.005    # drop this XY fraction each side for robust grid bounds (rejects far outliers)
+
+# Update / TF.
+update_rate:         5.0   # Hz; dynamic + inflation + fuse + publish cadence
+transform_tolerance: 0.2   # s; TF lookup tolerance
+
+# Ground-relative classification. The obstacle domain is "ground -> lidar plane":
+# the band BOTTOM is the per-cell local ground (per-cell lowest return, foot-
+# contact fallback); the band TOP is the LIDAR PLANE (the keyframe
+# origin z for the static layer, the mid360_link z for the dynamic layer) minus
+# phantom_drop, so the whole sub-lidar volume (e.g. a tall table) is obstacle and
+# overhead the robot walks under is ignored. offset = layerOf(z) - layerOf(ground_z):
+#   offset <= walkable_layers                          -> FREE   (at/below ground)
+#   walkable_layers < offset, z <= lidar_z-phantom_drop -> OBSTACLE
+#   z > lidar_z - phantom_drop                         -> ignored (ceiling / overhead)
+walkable_layers:     1     # +/- layers around ground treated as walkable
+obstacle_max_height: 2.0   # m above ground; SAFETY cap on the band top (the lidar plane normally bites first)
+phantom_drop:        0.1   # m below the lidar plane; returns above it are ignored (inverted-Mid-360 ghost cut)
+# Foot sole = 4 collision spheres in the *_ankle_roll_link frame (identical both
+# feet, from g1_description ankle_roll collision). The node projects the sphere
+# centres through the foot TF, takes the min world Z, and subtracts the radius =
+# the orientation-exact fallback ground (replaces the old fixed foot_thickness).
+# gate-verify each value against g1_description/urdf.
+foot_sole_z:        -0.03   # m; collision sphere CENTRE z below the ankle-roll origin
+foot_sole_radius:    0.005  # m; collision sphere radius (subtracted after projection)
+foot_toe_x:          0.12   # m; front (toe) contact x
+foot_heel_x:        -0.05   # m; rear (heel) contact x
+foot_front_half_y:   0.03   # m; toe +/- y
+foot_rear_half_y:    0.025  # m; heel +/- y
+max_fill_radius:     0.3   # m; robust-median ground neighbourhood (rejects far-below-floor outliers)
+ground_min_points:   1     # returns before a cell's ground is trusted (/slam/map is ~1 floor pt/cell)
+hole_fill_iters:     2     # morphological-close passes that fill voxel-sparse holes (0 disables)
+
+# Static layer raycast + segmentation (per keyframe, on the dense map-frame cloud).
+static_max_range: 0.0      # m; raycast beam range cap (0 = unlimited, cover the whole map)
+
+# Normal gate: refine the height band with the per-point surface normal so the
+# classification is robust to SLAM Z drift and slope. A near-horizontal surface
+# just above ground reads FREE (drifted floor); a near-vertical surface on the
+# floor reads OBSTACLE. Normals are estimated per keyframe (KNN PCA).
+use_normals:              true
+normal_k:                 20    # KNN neighbours for normal estimation
+ground_normal_angle:      40.0  # deg; surface normal within this of vertical -> flat (ground)
+vertical_normal_angle:    60.0  # deg; surface normal at least this from vertical -> wall face
+normal_flat_grace_layers: 2     # flat surfaces up to walkable_layers+this above ground demote to FREE
+
+# Probabilistic occupancy fusion (log-odds across keyframes): a cell needs
+# consistent evidence to read as an obstacle, and free observations can vote a
+# noise/drift obstacle back out (unlike last-write-wins).
+prob_hit:        0.7    # P(occupied | obstacle observation); > 0.5
+prob_miss:       0.4    # P(occupied | free observation);     < 0.5
+prob_clamp_min:  0.12   # lower probability clamp (free saturation)
+prob_clamp_max:  0.97   # upper probability clamp (obstacle saturation)
+occupancy_thr:   0.5    # probability at/above which a cell reads OBSTACLE
+erode_obstacles: true   # remove isolated obstacle speckle (cells ringed by free, no unknown)
+angular_fill:    true   # fill the unobserved wedges in front of observed surfaces with FREE
+angular_fill_step_deg: 0.5  # angular bin width for the fill sweep
+
+# Dynamic CHANGE layer: live registered cloud -> signed log-odds change
+# evidence vs the static map. Raycast misses lower a cell, obstacle hits raise it,
+# and every tick all evidence relaxes toward neutral by dyn_decay_half_life. Fusion
+# is asymmetric: dyn_add_thr/dyn_fill_thr are a LOW bar (add obstacle / fill
+# unknown); dyn_clear_thr is a HIGH bar (clear a static obstacle, e.g. an opened
+# door). Never writes the map file.
+dyn_max_range:       15.0  # m; ignore returns beyond this horizontal range
+dyn_raycast:         true  # vote a miss on cells the beam passes through
+# Ring suppression: a flat-ground cell carries SLAM Z scatter, so a few of its returns
+# land in the obstacle band by chance. Mark a cell obstacle only when a sufficient
+# FRACTION of its returns are in-band (dyn_obstacle_frac) and it has enough returns
+# (dyn_min_returns); else treat it as ground. A sparse in-band cell defers to the
+# temporal log-odds. Offline-validated on a stepping bag: F=0.4 removes ~91% of the
+# false ring while keeping real structure separable.
+dyn_obstacle_frac:   0.4   # in-band fraction above which a cell is an obstacle
+dyn_min_returns:     3     # min returns in a cell to apply the fraction test
+dyn_prob_hit:        0.7   # P(occupied | obstacle return); > 0.5
+dyn_prob_miss:       0.4   # P(occupied | free/miss observation); < 0.5
+dyn_clamp_min:       0.12  # lower probability clamp (free saturation)
+dyn_clamp_max:       0.97  # upper probability clamp (obstacle saturation)
+dyn_decay_half_life: 3.0   # s; change evidence relaxes toward neutral by half each
+dyn_add_thr:         0.65  # P(occ) at/above which a live obstacle is added (low bar)
+dyn_fill_thr:        0.65  # P(free) bar to fill a static UNKNOWN (low bar)
+dyn_clear_thr:       0.85  # P(free) bar to CLEAR a static LETHAL (door open; HIGH bar)
+
+# Inflation layer.
+# Published OccupancyGrid encoding: 0 free / 1..98 inflation gradient / 99 INSCRIBED
+# (within robot_radius; center-blocked for travel, not a real obstacle) / 100 LETHAL
+# (real obstacle) / -1 unknown. The inscribed/lethal split lets the global planner
+# relax inscribed near a goal and the local footprint filter check the true body vs
+# true-lethal only.
+# robot_radius is the robot BOUNDING-CIRCLE (circumscribed) radius used as the
+# inflation inscribed radius: cells within it of an obstacle become inscribed cost
+# (published 99, hard-blocked for travel). It MUST be >= the g1_local_planner footprint
+# circumscribed radius (default 0.25 m) so global paths keep the whole footprint off
+# lethal cells at any heading; the local planner's footprint filter is the precise,
+# orientation-aware backstop. 0.3 m ~= the circumscribed radius of a 0.5 x 0.3 m body.
+robot_radius:        0.3   # m; bounding-circle (inscribed) radius (cells within this -> inscribed cost)
+inflation_radius:    0.45  # m; thin cost halo past the inscribed radius (keeps free visible)
+cost_scaling_factor: 3.0   # exponential falloff rate past the inscribed radius
+
+# Local window: rolling robot-centered crop of the fused inflated master,
+# published for the MPC local planner (g1_local_planner).
+local_costmap_enable: true               # publish /nav/local_costmap each tick
+local_costmap_topic:  "/nav/local_costmap"  # topic for the rolling window OccupancyGrid
+local_size_m:         6.0               # side length of the square crop in metres (60x60 cells @ 0.1 m)
+robot_base_frame:     "base_link"        # TF frame for the crop center (map<-robot_base_frame)
+
+# clear_costmap service: explicit lever for the g1_nav recovery FSM to flush
+# stale/transient dynamic obstacles. The static SLAM map is never
+# touched. A still-present obstacle reappears on the very next dynamic update
+# (this clears stale/transient marks, not permanent walls -- by design).
+clear_service_enable: true               # advertise the clear_costmap service
+clear_service_name:   "clear_costmap"    # service name in the node's private namespace
+
+# Localization-phase guard: when true, the node ignores keyframe updates
+# after the first static map is built, so a frozen/loaded map is never rebuilt while
+# the change layer handles live avoidance. Default false (mapping rebuilds normally).
+freeze_static: false

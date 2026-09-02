@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>g1_bringup</name>
+  <version>0.0.1</version>
+  <description>Top-level bring-up and integration (composition root) for the humis-g1 stack. Reserved placeholder, not yet implemented.</description>
+  <maintainer email="66817439+rohanhong@users.noreply.github.com">Rohan</maintainer>
+  <author email="66817439+rohanhong@users.noreply.github.com">Rohan</author>
+  <license>Proprietary</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>

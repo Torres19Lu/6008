@@ -1,0 +1,9 @@
+string name          # "" = active map
+string op            # create | restore | list | delete
+string snapshot_id   # for restore/delete; for create, "" => auto-name from label+time
+string label         # for create
+string reason        # for create; default "milestone"
+---
+bool success
+string message
+g1_msgs/SnapshotEntry[] snapshots   # populated for op=list (and create echoes the new one)

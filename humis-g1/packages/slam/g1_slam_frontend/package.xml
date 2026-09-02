@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>g1_slam_frontend</name>
+  <version>0.1.0</version>
+  <description>
+    LiDAR-inertial odometry front end for the Unitree G1: an iterated error-state
+    Kalman filter fusing LiDAR and IMU, adapted to the humis-g1 interfaces. Subscribes /livox/lidar
+    (Livox CustomMsg) and /livox/imu; publishes /slam/frontend/odom,
+    /slam/frontend/cloud_registered, /slam/keyframe, and the TF odom->base_link
+    composed through the live waist_yaw joint.
+  </description>
+
+  <maintainer email="66817439+rohanhong@users.noreply.github.com">Rohan</maintainer>
+  <author email="66817439+rohanhong@users.noreply.github.com">Rohan</author>
+
+  <license>Proprietary</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>tf</depend>
+  <depend>tf2_ros</depend>
+  <depend>pcl_ros</depend>
+  <depend>eigen_conversions</depend>
+  <depend>livox_ros_driver2</depend>
+
+  <!-- Launch-only deps: slam_frontend.launch can optionally bring up these upstreams
+       (start_lidar -> g1_lidar; start_state -> g1_locomotion + g1_description). The
+       node itself only consumes their topics/TF; it does not link them. -->
+  <exec_depend>g1_lidar</exec_depend>
+  <exec_depend>g1_locomotion</exec_depend>
+  <exec_depend>g1_description</exec_depend>
+
+  <test_depend>rostest</test_depend>
+</package>

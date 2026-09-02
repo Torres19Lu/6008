@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!--
+  g1_costmap: 2D layered occupancy costmap for the G1.
+
+  Inputs : /slam/map (PointCloud2, latched, map frame) -> static layer,
+           /slam/frontend/cloud_registered (PointCloud2, odom frame) -> dynamic
+           layer, TF map<-odom and map<-base_link.
+  Output : /nav/costmap (nav_msgs/OccupancyGrid, map frame) for the global planner.
+
+  This node only CONSUMES topics + TF; it owns no TF and publishes only the
+  costmap. It produces the global grid; the rolling local window for MPC
+  (/nav/local_costmap) is enabled by default. The launch offers opt-in args to bring up its upstream (all default
+  off): start_slam pulls in g1_slam_backend (which itself produces /slam/map,
+  cloud_registered, and map->odom). The backend's own deeper toggles are
+  surfaced here and passed through:
+    start_slam     : g1_slam_backend (the SLAM map + map->odom source).
+    start_frontend : forwarded to the backend (g1_slam_frontend odometry).
+    start_lidar    : forwarded to the backend->frontend (g1_lidar CustomMsg).
+    start_state    : forwarded to the backend->frontend (g1_locomotion + g1_description).
+    map_path       : forwarded to the backend (load + localize at startup).
+
+  Usage:
+    roslaunch g1_costmap costmap.launch                                        # SLAM/bag already up
+    roslaunch g1_costmap costmap.launch rviz:=true                             # + viz
+    roslaunch g1_costmap costmap.launch start_slam:=true map_path:=/path/to/map rviz:=true   # localize on a saved map + costmap
+    roslaunch g1_costmap costmap.launch start_slam:=true start_frontend:=true start_lidar:=true start_state:=true rviz:=true  # full live stack
+-->
+<launch>
+  <arg name="rviz" default="false"/>
+  <arg name="start_slam" default="false"/>                  <!-- bring up g1_slam_backend (map + map->odom source) -->
+  <arg name="start_frontend" default="false"/>              <!-- forwarded to the backend: g1_slam_frontend odometry -->
+  <arg name="start_lidar" default="false"/>                 <!-- forwarded through: g1_lidar in CustomMsg mode -->
+  <arg name="start_state" default="false"/>                 <!-- forwarded through: g1_locomotion + g1_description -->
+  <arg name="map_path" default=""/>                         <!-- forwarded to the backend: load + localize at startup -->
+  <arg name="interface" default="$(optenv G1_NETWORK_INTERFACE)"/>
+
+  <!-- Optional upstream: the SLAM backend (and, through it, the frontend and
+       sensors). The backend owns its deeper upstreams; we pass the toggles. -->
+  <include if="$(arg start_slam)" file="$(find g1_slam_backend)/launch/slam_backend.launch">
+    <arg name="start_frontend" value="$(arg start_frontend)"/>
+    <arg name="start_lidar" value="$(arg start_lidar)"/>
+    <arg name="start_state" value="$(arg start_state)"/>
+    <arg name="map_path" value="$(arg map_path)"/>
+    <arg name="interface" value="$(arg interface)"/>
+  </include>
+
+  <node name="g1_costmap" pkg="g1_costmap" type="g1_costmap_node"
+        output="screen" required="true">
+    <rosparam command="load" file="$(find g1_costmap)/config/costmap.yaml"/>
+  </node>
+
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" name="costmap_rviz"
+        args="-d $(find g1_costmap)/config/costmap.rviz"/>
+</launch>

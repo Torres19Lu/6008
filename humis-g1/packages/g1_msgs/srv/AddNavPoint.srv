@@ -1,0 +1,10 @@
+string name
+string map_name          # "" = active map
+geometry_msgs/Pose pose  # used only when use_current_pose == false
+bool use_current_pose    # capture TF map->base_link when true
+uint8 source
+bool overwrite
+---
+bool success
+string message
+g1_msgs/NavPoint point

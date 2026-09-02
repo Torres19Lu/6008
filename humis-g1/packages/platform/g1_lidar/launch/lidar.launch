@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<!--
+  Livox Mid-360 bring-up for the Unitree G1.
+
+  Host IP is injected at LAUNCH time (not build time): generate_livox_config.py
+  resolves PC1's IPv4 from $G1_NETWORK_INTERFACE (override via host_ip:=) and
+  writes config/MID360_config.json from the tracked template, then prints its
+  path, which roslaunch captures into user_config_path. LiDAR IP is fixed at
+  192.168.123.120 in the template.
+
+  Topics: /livox/lidar (PointCloud2, mid360_link), /livox/imu (Imu, livox_frame).
+
+  The Livox-SDK2 console flood is filtered by default (quiet_driver:=true); genuine
+  warnings/errors and all ROS messages still pass through. See the quiet_driver /
+  driver_log_filter args below.
+
+  Usage:
+    roslaunch g1_lidar lidar.launch
+    roslaunch g1_lidar lidar.launch rviz:=true
+    roslaunch g1_lidar lidar.launch host_ip:=192.168.123.42      # manual override
+    roslaunch g1_lidar lidar.launch interface:=eth0
+    roslaunch g1_lidar lidar.launch quiet_driver:=false          # show the SDK flood
+-->
+<launch>
+  <!-- Network resolution -->
+  <arg name="interface" default="$(optenv G1_NETWORK_INTERFACE)"/>
+  <arg name="host_ip" default=""/>
+
+  <!-- Driver parameters -->
+  <arg name="frame_id" default="mid360_link"/>
+  <arg name="xfer_format" default="0"/>      <!-- 0 = PointCloud2 (interface contract) -->
+  <arg name="multi_topic" default="0"/>
+  <arg name="data_src" default="0"/>
+  <arg name="publish_freq" default="10.0"/>
+  <arg name="output_type" default="0"/>
+  <arg name="bd_list" default="100000000000000"/>
+  <arg name="rviz" default="false"/>
+
+  <!-- Quiet the Livox-SDK2 console flood. The SDK's spdlog console logger spams
+       stdout with per-packet INFO lines under ROS1 (livox_ros_driver2 disables it
+       only under #ifdef BUILDING_ROS2); that switch is all-or-nothing and would
+       also hide genuine SDK warnings/errors. quiet_driver (default on) instead
+       runs the driver under a launch-prefix that drops only the lines matching
+       driver_log_filter, so warnings/errors and all ROS messages still show.
+       Disable with quiet_driver:=false; widen the denylist via driver_log_filter. -->
+  <arg name="quiet_driver" default="true"/>
+  <arg name="driver_log_filter" default="Handle detection data|Receive Command: Id"/>
+  <arg name="driver_launch_prefix" value="$(find g1_lidar)/scripts/filter_node_log.sh"
+       if="$(arg quiet_driver)"/>
+  <arg name="driver_launch_prefix" value="" unless="$(arg quiet_driver)"/>
+
+  <!-- Generate the Livox host config at launch and capture its path. -->
+  <param name="user_config_path" type="string"
+         command="$(find g1_lidar)/scripts/generate_livox_config.py
+                  --template $(find g1_lidar)/config/MID360_config.json.template
+                  --output $(find g1_lidar)/config/MID360_config.json
+                  --interface $(arg interface)
+                  --host-ip $(arg host_ip)"/>
+
+  <!-- livox_ros_driver2 parameters -->
+  <param name="xfer_format" value="$(arg xfer_format)"/>
+  <param name="multi_topic" value="$(arg multi_topic)"/>
+  <param name="data_src" value="$(arg data_src)"/>
+  <param name="publish_freq" type="double" value="$(arg publish_freq)"/>
+  <param name="output_data_type" value="$(arg output_type)"/>
+  <param name="cmdline_str" type="string" value="$(arg bd_list)"/>
+  <param name="frame_id" type="string" value="$(arg frame_id)"/>
+  <param name="enable_lidar_bag" type="bool" value="true"/>
+  <param name="enable_imu_bag" type="bool" value="true"/>
+
+  <node name="livox_lidar_publisher2" pkg="livox_ros_driver2"
+        type="livox_ros_driver2_node" required="true"
+        output="screen" args="$(arg bd_list)"
+        launch-prefix="$(arg driver_launch_prefix)">
+    <env name="G1_LIDAR_LOG_FILTER" value="$(arg driver_log_filter)"/>
+  </node>
+
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" name="lidar_rviz"
+        args="-d $(find g1_lidar)/config/lidar.rviz"/>
+</launch>

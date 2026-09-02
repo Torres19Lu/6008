@@ -1,0 +1,34 @@
+<launch>
+  <!-- Visualization bring-up. A joint source feeds /joint_states:
+         gui:=true     -> joint_state_publisher_gui (manual sliders, default)
+         gui:=false    -> joint_state_publisher (all zeros)
+         animate:=true -> fake_joint_states (auto waist sweep; overrides gui)
+       use_fake_odom publishes a static odom->base_link so base_footprint shows. -->
+  <arg name="model" default="$(find g1_description)/urdf/g1.urdf.xacro"/>
+  <arg name="gui" default="true"/>
+  <arg name="animate" default="false"/>
+  <arg name="use_fake_odom" default="true"/>
+
+  <include file="$(find g1_description)/launch/description.launch">
+    <arg name="model" value="$(arg model)"/>
+  </include>
+
+  <node if="$(arg use_fake_odom)" pkg="tf2_ros" type="static_transform_publisher"
+        name="fake_odom" args="0 0 0.793 0 0 0 odom base_link"/>
+
+  <group unless="$(arg animate)">
+    <node if="$(arg gui)" name="joint_state_publisher_gui"
+          pkg="joint_state_publisher_gui" type="joint_state_publisher_gui"/>
+    <node unless="$(arg gui)" name="joint_state_publisher"
+          pkg="joint_state_publisher" type="joint_state_publisher"/>
+  </group>
+
+  <node if="$(arg animate)" name="fake_joint_states" pkg="g1_description"
+        type="fake_joint_states" output="screen">
+    <param name="frequency_hz" value="0.2"/>
+    <param name="amplitude" value="1.0"/>
+  </node>
+
+  <node name="rviz" pkg="rviz" type="rviz"
+        args="-d $(find g1_description)/config/g1.rviz" required="true"/>
+</launch>

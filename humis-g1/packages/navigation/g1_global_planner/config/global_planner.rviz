@@ -1,0 +1,58 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+  - Class: rviz/Tool Properties
+    Name: Tool Properties
+Visualization Manager:
+  Global Options:
+    Fixed Frame: map
+    Frame Rate: 30
+    Background Color: 48; 48; 48
+  Displays:
+    - Class: rviz/Grid
+      Name: Grid
+      Enabled: true
+      Plane Cell Count: 40
+      Cell Size: 1
+    - Class: rviz/TF
+      Name: TF
+      Enabled: true
+      Show Names: true
+    # The inflated costmap the planner searches (move_base "costmap" scheme:
+    # lethal magenta, inscribed cyan, cost ramp, free/unknown transparent).
+    - Class: rviz/Map
+      Name: Costmap
+      Enabled: true
+      Topic: /nav/costmap
+      Color Scheme: costmap
+      Alpha: 0.7
+      Draw Behind: true
+    # Toggle: the 3-state grid (free white / occupied black /
+    # unknown gray), the clean planning surface without inflation colour.
+    - Class: rviz/Map
+      Name: CostmapRaw
+      Enabled: false
+      Topic: /nav/costmap_raw
+      Color Scheme: map
+      Alpha: 0.7
+      Draw Behind: true
+    # The global path: send a goal with the "2D Nav Goal" tool to see it.
+    - Class: rviz/Path
+      Name: GlobalPath
+      Enabled: true
+      Topic: /nav/global_path
+      Color: 25; 255; 0
+      Line Style: Billboards
+      Line Width: 0.05
+  Tools:
+    - Class: rviz/MoveCamera
+    - Class: rviz/FocusCamera
+    # Publishes geometry_msgs/PoseStamped on /move_base_simple/goal (the node's
+    # goal_topic): click a goal in the map to plan.
+    - Class: rviz/SetGoal
+      Topic: /move_base_simple/goal
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 30
+      Name: Current View

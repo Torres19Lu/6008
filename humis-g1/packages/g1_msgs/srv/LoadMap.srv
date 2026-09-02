@@ -1,0 +1,5 @@
+string path
+bool read_only           # refuse all disk writes while loaded
+---
+bool success
+string message

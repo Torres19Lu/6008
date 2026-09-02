@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>g1_lidar</name>
+  <version>0.1.0</version>
+  <description>
+    Livox Mid-360 bring-up for the Unitree G1: wraps livox_ros_driver2 and
+    publishes /livox/lidar (PointCloud2, mid360_link) and /livox/imu (Imu,
+    livox_frame), with the host IP injected at launch from $G1_NETWORK_INTERFACE.
+  </description>
+
+  <maintainer email="66817439+rohanhong@users.noreply.github.com">Rohan</maintainer>
+  <author email="66817439+rohanhong@users.noreply.github.com">Rohan</author>
+  <license>Proprietary</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>livox_ros_driver2</exec_depend>
+  <exec_depend>rviz</exec_depend>
+
+  <test_depend>python3-nose</test_depend>
+
+  <export>
+  </export>
+</package>

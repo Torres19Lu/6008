@@ -1,0 +1,19 @@
+<launch>
+  <!-- Loads robot_description, runs robot_state_publisher, and publishes the
+       dynamic base_footprint. This is the production-shaped description bring-up;
+       it does NOT provide a /joint_states source (g1_locomotion publishes the real
+       joints from the robot's LowState). For URDF-only visualization without a
+       robot, use display.launch (joint_state_publisher sliders/zeros). -->
+  <arg name="model" default="$(find g1_description)/urdf/g1.urdf.xacro"/>
+
+  <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher"
+        type="robot_state_publisher"/>
+
+  <node name="base_footprint_publisher" pkg="g1_description"
+        type="base_footprint_publisher" output="screen">
+    <rosparam command="load"
+              file="$(find g1_description)/config/g1_description.yaml"/>
+  </node>
+</launch>

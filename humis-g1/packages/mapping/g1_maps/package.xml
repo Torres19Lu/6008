@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>g1_maps</name>
+  <version>0.0.1</version>
+  <description>Data-only package: the on-disk contract for named, versioned maps and the global cross-map topology used by g1_map_manager.</description>
+  <maintainer email="66817439+rohanhong@users.noreply.github.com">Rohan</maintainer>
+  <author email="66817439+rohanhong@users.noreply.github.com">Rohan</author>
+  <license>Proprietary</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>

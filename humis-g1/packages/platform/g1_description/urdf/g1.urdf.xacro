@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<robot name="g1_23dof" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Official vendored description; its root link is pelvis. xacro:include
+       splices the included <robot>'s children into this one. -->
+  <xacro:include filename="$(find g1_description)/urdf/g1_23dof_mode_10.urdf"/>
+
+  <!-- REP-105 base_link, identity to pelvis (zero-offset fixed joint). base_link is the
+       kinematic root that SLAM tracks via odom->base_link; everything below
+       (pelvis, waist_yaw->torso, sensors) is owned by robot_state_publisher. -->
+  <link name="base_link"/>
+  <joint name="base_link_to_pelvis" type="fixed">
+    <parent link="base_link"/>
+    <child link="pelvis"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- RealSense base-frame bridge: the realsense2_camera driver roots its
+       optical frames at camera_link; hang that under the URDF d435_link.
+       The offset defaults to identity and is overridden once the camera
+       extrinsic is measured; pass calibrated values via the xacro args below. -->
+  <xacro:arg name="d435_to_camera_xyz" default="0 0 0"/>
+  <xacro:arg name="d435_to_camera_rpy" default="0 0 0"/>
+  <link name="camera_link"/>
+  <joint name="d435_to_camera_link" type="fixed">
+    <parent link="d435_link"/>
+    <child link="camera_link"/>
+    <origin xyz="$(arg d435_to_camera_xyz)" rpy="$(arg d435_to_camera_rpy)"/>
+  </joint>
+
+</robot>
