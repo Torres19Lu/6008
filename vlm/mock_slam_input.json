@@ -1,0 +1,19 @@
+{
+  "frame_id": "map",
+  "target_text": "red chair",
+  "base_class": "chair",
+  "depth_m": 2.0,
+  "robot_pose": {
+    "x": 1.0,
+    "y": 2.0,
+    "yaw_deg": 30.0
+  },
+  "camera": {
+    "horizontal_fov_deg": 69.0
+  },
+  "detection": {
+    "center_x_normalized": 0.5,
+    "yolo_confidence": 0.966,
+    "clip_similarity": 0.254
+  }
+}
