@@ -1,8 +1,28 @@
-semantic_memory.json
+# Python
 __pycache__/
 *.pyc
+*.pyo
+
+# 模型权重
 *.pt
 *.pth
 *.safetensors
+
+# ROS 与地图大文件
 *.bag
 *.pcd
+*.tar
+*.tar.gz
+sim_classroom_map/
+
+# 抽帧与程序输出
+rgb_samples*/
+outputs/
+semantic_memory.json
+
+# 环境与缓存
+.conda/
+venv/
+.env
+.cache/
+.DS_Store

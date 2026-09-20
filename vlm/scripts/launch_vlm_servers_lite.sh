@@ -1,39 +1,72 @@
 #!/usr/bin/env bash
-# Copyright [2023] Boston Dynamics AI Institute, Inc.
 
-# Ensure you have 'export VLFM_PYTHON=<PATH_TO_PYTHON>' in your .bashrc, where
-# <PATH_TO_PYTHON> is the path to the python executable for your conda env
-# (e.g., PATH_TO_PYTHON=`conda activate <env_name> && which python`)
+set -euo pipefail
 
-export VLFM_PYTHON=${VLFM_PYTHON:-`which python`}
-export MOBILE_SAM_CHECKPOINT=${MOBILE_SAM_CHECKPOINT:-data/mobile_sam.pt}
-export GROUNDING_DINO_CONFIG=${GROUNDING_DINO_CONFIG:-GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py}
-export GROUNDING_DINO_WEIGHTS=${GROUNDING_DINO_WEIGHTS:-data/groundingdino_swint_ogc.pth}
-export CLASSES_PATH=${CLASSES_PATH:-vlfm/vlm/classes.txt}
-export GROUNDING_DINO_PORT=${GROUNDING_DINO_PORT:-12181}
-export BLIP2ITM_PORT=${BLIP2ITM_PORT:-12182}
-export SAM_PORT=${SAM_PORT:-12183}
-export YOLOV7_PORT=${YOLOV7_PORT:-12184}
+SESSION_NAME="${VLM_SESSION_NAME:-vlm_servers_lite}"
+OPENCLIP_PORT="${OPENCLIP_PORT:-12182}"
+YOLOV7_PORT="${YOLOV7_PORT:-12184}"
 
-session_name=vlm_servers_${RANDOM}
+if [[ -z "${CONDA_PREFIX:-}" ]]; then
+    echo "错误：请先执行 conda activate vlm"
+    exit 1
+fi
 
-# Create a detached tmux session
-tmux new-session -d -s ${session_name}
+if ! command -v tmux >/dev/null 2>&1; then
+    echo "错误：没有安装 tmux"
+    exit 1
+fi
 
-# Split the window vertically
-tmux split-window -v -t ${session_name}:0
+VLFM_PYTHON="${VLFM_PYTHON:-$(command -v python)}"
+LIBSTDCXX="${CONDA_PREFIX}/lib/libstdc++.so.6"
+WORK_DIR="$(pwd)"
 
-# Split both panes horizontally
-tmux split-window -h -t ${session_name}:0.0
-tmux split-window -h -t ${session_name}:0.2
+if [[ ! -f "${LIBSTDCXX}" ]]; then
+    echo "错误：找不到 ${LIBSTDCXX}"
+    exit 1
+fi
 
-# Run commands in each pane
-# tmux send-keys -t ${session_name}:0.0 "${VLFM_PYTHON} -m vlfm.vlm.grounding_dino --port ${GROUNDING_DINO_PORT}" C-m
-tmux send-keys -t ${session_name}:0.1 "${VLFM_PYTHON} -m vlfm.vlm.clipitm --port ${BLIP2ITM_PORT}" C-m
-tmux send-keys -t ${session_name}:0.2 "${VLFM_PYTHON} -m vlfm.vlm.sam --port ${SAM_PORT}" C-m
-tmux send-keys -t ${session_name}:0.3 "${VLFM_PYTHON} -m vlfm.vlm.yolov7 --port ${YOLOV7_PORT}" C-m
+if tmux has-session -t "${SESSION_NAME}" 2>/dev/null; then
+    echo "模型服务已经存在：${SESSION_NAME}"
+    echo "查看服务：tmux attach-session -t ${SESSION_NAME}"
+    exit 0
+fi
 
-# Attach to the tmux session to view the windows
-echo "Created tmux session '${session_name}'. You must wait up to 90 seconds for the model weights to finish being loaded."
-echo "Run the following to monitor all the server commands:"
-echo "tmux attach-session -t ${session_name}"
+tmux new-session \
+    -d \
+    -s "${SESSION_NAME}" \
+    -c "${WORK_DIR}"
+
+tmux split-window \
+    -h \
+    -t "${SESSION_NAME}:0" \
+    -c "${WORK_DIR}"
+
+OPENCLIP_COMMAND="export LD_PRELOAD='${LIBSTDCXX}'; '${VLFM_PYTHON}' -m vlfm.vlm.clipitm --port ${OPENCLIP_PORT}"
+YOLO_COMMAND="export LD_PRELOAD='${LIBSTDCXX}'; '${VLFM_PYTHON}' -m vlfm.vlm.yolov7 --port ${YOLOV7_PORT}"
+
+tmux send-keys \
+    -t "${SESSION_NAME}:0.0" \
+    "${OPENCLIP_COMMAND}" \
+    C-m
+
+tmux send-keys \
+    -t "${SESSION_NAME}:0.1" \
+    "${YOLO_COMMAND}" \
+    C-m
+
+tmux select-layout \
+    -t "${SESSION_NAME}:0" \
+    even-horizontal
+
+echo "已创建模型服务：${SESSION_NAME}"
+echo "当前只启动 OpenCLIP 和 YOLOv7。"
+echo "模型加载可能需要几十秒。"
+echo
+echo "查看模型服务："
+echo "tmux attach-session -t ${SESSION_NAME}"
+echo
+echo "退出查看但保持服务运行："
+echo "按 Ctrl+B，然后按 D"
+echo
+echo "结束两个模型服务："
+echo "tmux kill-session -t ${SESSION_NAME}"

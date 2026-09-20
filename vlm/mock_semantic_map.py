@@ -1,7 +1,20 @@
+import argparse
 import json
 import math
-import sys
 from pathlib import Path
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="使用模拟深度和位姿验证语义目标坐标输出结构"
+    )
+    parser.add_argument("input_json", help="模拟输入 JSON")
+    parser.add_argument(
+        "--output",
+        default="semantic_memory.json",
+        help="语义记忆输出文件",
+    )
+    return parser.parse_args()
 
 
 def load_json(path):
@@ -9,69 +22,88 @@ def load_json(path):
         return json.load(file)
 
 
-if len(sys.argv) != 2:
-    print("用法: python mock_semantic_map.py mock_slam_input.json")
-    sys.exit(1)
+def save_json(path, data):
+    with open(path, "w", encoding="utf-8") as file:
+        json.dump(data, file, ensure_ascii=False, indent=2)
 
-input_path = Path(sys.argv[1])
-data = load_json(input_path)
 
-target = data["target_text"]
-depth_m = float(data["depth_m"])
+def main():
+    args = parse_args()
 
-robot_x = float(data["robot_pose"]["x"])
-robot_y = float(data["robot_pose"]["y"])
-robot_yaw_deg = float(data["robot_pose"]["yaw_deg"])
+    input_path = Path(args.input_json)
+    output_path = Path(args.output)
+    data = load_json(input_path)
 
-center_x = float(data["detection"]["center_x_normalized"])
-horizontal_fov_deg = float(data["camera"]["horizontal_fov_deg"])
+    target_text = data["target_text"].strip().lower()
+    base_class = data.get(
+        "base_class",
+        target_text.split()[-1],
+    ).strip().lower()
 
-# 目标偏离画面中心的角度。
-# center_x=0.5 表示目标位于画面中央。
-camera_angle_deg = (center_x - 0.5) * horizontal_fov_deg
-target_angle_deg = robot_yaw_deg + camera_angle_deg
-target_angle_rad = math.radians(target_angle_deg)
+    depth_m = float(data["depth_m"])
 
-# 简化的二维坐标投影。
-target_x = robot_x + depth_m * math.cos(target_angle_rad)
-target_y = robot_y + depth_m * math.sin(target_angle_rad)
+    robot_x = float(data["robot_pose"]["x"])
+    robot_y = float(data["robot_pose"]["y"])
+    robot_yaw_deg = float(data["robot_pose"]["yaw_deg"])
 
-semantic_object = {
-    "label": target,
-    "frame_id": data["frame_id"],
-    "position": {
-        "x": round(target_x, 3),
-        "y": round(target_y, 3),
-        "z": 0.0
-    },
-    "depth_m": depth_m,
-    "yolo_confidence": data["detection"]["yolo_confidence"],
-    "clip_similarity": data["detection"]["clip_similarity"]
-}
+    center_x = float(
+        data["detection"]["center_x_normalized"]
+    )
+    horizontal_fov_deg = float(
+        data["camera"]["horizontal_fov_deg"]
+    )
 
-memory_path = Path("semantic_memory.json")
-memory = {}
+    # 这是模拟计算，不是真实相机内参和 TF 转换。
+    camera_angle_deg = (
+        center_x - 0.5
+    ) * horizontal_fov_deg
 
-if memory_path.exists():
-    memory = load_json(memory_path)
+    target_angle_deg = (
+        robot_yaw_deg + camera_angle_deg
+    )
+    target_angle_rad = math.radians(target_angle_deg)
 
-memory[target] = semantic_object
+    target_x = robot_x + depth_m * math.cos(target_angle_rad)
+    target_y = robot_y + depth_m * math.sin(target_angle_rad)
 
-with open(memory_path, "w", encoding="utf-8") as file:
-    json.dump(memory, file, ensure_ascii=False, indent=2)
+    semantic_object = {
+        "target_text": target_text,
+        "base_class": base_class,
+        "detected": True,
+        "frame_id": data["frame_id"],
+        "object_position": {
+            "x": round(target_x, 3),
+            "y": round(target_y, 3),
+            "z": 0.0,
+        },
+        "depth_m": depth_m,
+        "yolo_confidence": data["detection"]["yolo_confidence"],
+        "clip_similarity": data["detection"]["clip_similarity"],
+        "source": "mock_input_only",
+    }
 
-navigation_goal = {
-    "target": target,
-    "found_in_memory": target in memory,
-    "frame_id": memory[target]["frame_id"],
-    "goal_x": memory[target]["position"]["x"],
-    "goal_y": memory[target]["position"]["y"]
-}
+    memory = {}
+    if output_path.exists():
+        memory = load_json(output_path)
 
-print("检测并记录的语义目标：")
-print(json.dumps(semantic_object, ensure_ascii=False, indent=2))
+    memory[target_text] = semantic_object
+    save_json(output_path, memory)
 
-print("\n查询目标后返回的导航坐标：")
-print(json.dumps(navigation_goal, ensure_ascii=False, indent=2))
+    query_result = {
+        "target_text": target_text,
+        "found_in_memory": target_text in memory,
+        "semantic_object": memory[target_text],
+    }
 
-print("\n模拟测试成功")
+    print("模拟检测并保存的语义目标：")
+    print(json.dumps(semantic_object, ensure_ascii=False, indent=2))
+
+    print("\n查询语义记忆的结果：")
+    print(json.dumps(query_result, ensure_ascii=False, indent=2))
+
+    print("\n模拟测试成功")
+    print("注意：这里不是导航目标，也没有进行避障或路径规划。")
+
+
+if __name__ == "__main__":
+    main()
