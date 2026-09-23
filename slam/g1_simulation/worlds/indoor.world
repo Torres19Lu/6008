@@ -1,0 +1,170 @@
+<?xml version="1.0"?>
+  <sdf version="1.6">
+    <world name="indoor_world">
+      <include>
+        <uri>model://sun</uri>
+      </include>
+
+      <include>
+        <uri>model://ground_plane</uri>
+      </include>
+
+      <physics type="ode">
+        <real_time_update_rate>1000</real_time_update_rate>
+        <max_step_size>0.001</max_step_size>
+      </physics>
+
+      <!-- 北侧墙 -->
+      <model name="wall_north">
+        <static>true</static>
+        <pose>0 5 1.5 0 0 0</pose>
+        <link name="link">
+          <collision name="collision">
+            <geometry><box><size>10 0.2 3</size></box></geometry>
+          </collision>
+          <visual name="visual">
+            <geometry><box><size>10 0.2 3</size></box></geometry>
+          </visual>
+        </link>
+      </model>
+
+      <!-- 南侧墙 -->
+      <model name="wall_south">
+        <static>true</static>
+        <pose>0 -5 1.5 0 0 0</pose>
+        <link name="link">
+          <collision name="collision">
+            <geometry><box><size>10 0.2 3</size></box></geometry>
+          </collision>
+          <visual name="visual">
+            <geometry><box><size>10 0.2 3</size></box></geometry>
+          </visual>
+        </link>
+      </model>
+
+      <!-- 东侧墙 -->
+      <model name="wall_east">
+        <static>true</static>
+        <pose>5 0 1.5 0 0 0</pose>
+        <link name="link">
+          <collision name="collision">
+            <geometry><box><size>0.2 10 3</size></box></geometry>
+          </collision>
+          <visual name="visual">
+            <geometry><box><size>0.2 10 3</size></box></geometry>
+          </visual>
+        </link>
+      </model>
+
+      <!-- 西侧墙 -->
+      <model name="wall_west">
+        <static>true</static>
+        <pose>-5 0 1.5 0 0 0</pose>
+        <link name="link">
+          <collision name="collision">
+            <geometry><box><size>0.2 10 3</size></box></geometry>
+          </collision>
+          <visual name="visual">
+            <geometry><box><size>0.2 10 3</size></box></geometry>
+          </visual>
+        </link>
+      </model>
+
+      <!-- 用于产生非对称特征的障碍物 -->
+      <model name="box_obstacle">
+        <static>true</static>
+        <pose>2 1 0.75 0 0 0.35</pose>
+        <link name="link">
+          <collision name="collision">
+            <geometry><box><size>1.2 0.8 1.5</size></box></geometry>
+          </collision>
+          <visual name="visual">
+            <geometry><box><size>1.2 0.8 1.5</size></box></geometry>
+          </visual>
+        </link>
+      </model>
+<model name="red_chair">
+        <static>true</static>
+        <pose>2.5 0 0 0 0 -1.57</pose>
+
+        <link name="chair_link">
+          <!-- 座板 -->
+          <collision name="seat_collision">
+            <pose>0 0 0.45 0 0 0</pose>
+            <geometry>
+              <box><size>0.5 0.5 0.08</size></box>
+            </geometry>
+          </collision>
+          <visual name="seat_visual">
+            <pose>0 0 0.45 0 0 0</pose>
+            <geometry>
+              <box><size>0.5 0.5 0.08</size></box>
+            </geometry>
+            <material>
+              <ambient>0.8 0.02 0.02 1</ambient>
+              <diffuse>0.9 0.02 0.02 1</diffuse>
+            </material>
+          </visual>
+
+          <!-- 靠背 -->
+          <collision name="back_collision">
+            <pose>0 0.23 0.72 0 0 0</pose>
+            <geometry>
+              <box><size>0.5 0.07 0.55</size></box>
+            </geometry>
+          </collision>
+          <visual name="back_visual">
+            <pose>0 0.23 0.72 0 0 0</pose>
+            <geometry>
+              <box><size>0.5 0.07 0.55</size></box>
+            </geometry>
+            <material>
+              <ambient>0.8 0.02 0.02 1</ambient>
+              <diffuse>0.9 0.02 0.02 1</diffuse>
+            </material>
+          </visual>
+
+          <!-- 四条椅腿 -->
+          <collision name="leg_fl_collision">
+            <pose>0.20 0.20 0.21 0 0 0</pose>
+            <geometry><box><size>0.06 0.06 0.42</size></box></geometry>
+          </collision>
+          <visual name="leg_fl_visual">
+            <pose>0.20 0.20 0.21 0 0 0</pose>
+            <geometry><box><size>0.06 0.06 0.42</size></box></geometry>
+            <material><ambient>0.8 0.02 0.02 1</ambient><diffuse>0.9 0.02 0.02 1</diffuse></material>
+          </visual>
+
+          <collision name="leg_fr_collision">
+            <pose>-0.20 0.20 0.21 0 0 0</pose>
+            <geometry><box><size>0.06 0.06 0.42</size></box></geometry>
+          </collision>
+          <visual name="leg_fr_visual">
+            <pose>-0.20 0.20 0.21 0 0 0</pose>
+            <geometry><box><size>0.06 0.06 0.42</size></box></geometry>
+            <material><ambient>0.8 0.02 0.02 1</ambient><diffuse>0.9 0.02 0.02 1</diffuse></material>
+          </visual>
+
+          <collision name="leg_rl_collision">
+            <pose>0.20 -0.20 0.21 0 0 0</pose>
+            <geometry><box><size>0.06 0.06 0.42</size></box></geometry>
+          </collision>
+          <visual name="leg_rl_visual">
+            <pose>0.20 -0.20 0.21 0 0 0</pose>
+            <geometry><box><size>0.06 0.06 0.42</size></box></geometry>
+            <material><ambient>0.8 0.02 0.02 1</ambient><diffuse>0.9 0.02 0.02 1</diffuse></material>
+          </visual>
+
+          <collision name="leg_rr_collision">
+            <pose>-0.20 -0.20 0.21 0 0 0</pose>
+            <geometry><box><size>0.06 0.06 0.42</size></box></geometry>
+          </collision>
+          <visual name="leg_rr_visual">
+            <pose>-0.20 -0.20 0.21 0 0 0</pose>
+            <geometry><box><size>0.06 0.06 0.42</size></box></geometry>
+            <material><ambient>0.8 0.02 0.02 1</ambient><diffuse>0.9 0.02 0.02 1</diffuse></material>
+          </visual>
+        </link>
+      </model>
+    </world>
+  </sdf>

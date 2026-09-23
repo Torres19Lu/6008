@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="gui" default="true"/>
+  <arg name="x" default="-4.0"/>
+  <arg name="y" default="-4.0"/>
+  <arg name="yaw" default="0.0"/>
+
+  <include file="$(find g1_simulation)/launch/indoor_world.launch">
+    <arg name="gui" value="$(arg gui)"/>
+  </include>
+
+  <param name="robot_description"
+         command="$(find xacro)/xacro $(find g1_simulation)/urdf/g1_sim.urdf.xacro d435_to_camera_rpy:='0 -0.8307767239493009 0'"/>
+
+  <node pkg="robot_state_publisher"
+        type="robot_state_publisher"
+        name="g1_sim_robot_state_publisher"/>
+
+  <node pkg="g1_simulation"
+        type="publish_g1_sim_joint.py"
+        name="g1_sim_joint_state"
+        output="screen"/>
+
+  <node pkg="g1_simulation"
+        type="sim_livox_bridge.py"
+        name="sim_livox_bridge"
+        output="screen"/>
+
+  <node pkg="gazebo_ros"
+        type="spawn_model"
+        name="spawn_g1_sim"
+        output="screen"
+        args="-urdf -param robot_description -model g1_sim
+              -x $(arg x) -y $(arg y) -z 0.793 -Y $(arg yaw)"/>
+</launch>

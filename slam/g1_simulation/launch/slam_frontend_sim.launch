@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+  <node name="g1_slam_frontend"
+        pkg="g1_slam_frontend"
+        type="g1_slam_frontend_node"
+        output="screen"
+        required="true">
+    <rosparam command="load"
+              file="$(find g1_simulation)/config/slam_frontend_sim.yaml"/>
+    <remap from="/Odometry" to="/slam/frontend/odom"/>
+    <remap from="/cloud_registered"
+           to="/slam/frontend/cloud_registered"/>
+    <remap from="/path" to="/slam/frontend/path"/>
+  </node>
+</launch>

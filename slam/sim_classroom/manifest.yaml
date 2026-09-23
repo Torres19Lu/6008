@@ -1,0 +1,9 @@
+# g1_slam_backend map. Inspectable and re-optimizable.
+format_version: 1
+num_keyframes: 339
+keyframe_voxel: 0.1
+sc_num_rings: 20
+sc_num_sectors: 60
+sc_max_range: 60
+sc_min_range: 0.5
+sc_height_offset: 2
