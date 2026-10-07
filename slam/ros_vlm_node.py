@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Realtime RGB-D semantic localizer for ROS Noetic.
 
-The neural networks stay in the lightweight VLFM HTTP servers.  This node uses
-the system ROS Python, synchronizes live Gazebo images, queries the two model
-servers, transforms the detected point into ``map``, and publishes a stable
-target pose.
+The neural networks stay in the lightweight VLFM HTTP servers. This node uses
+the system ROS Python, synchronizes live RGB and aligned-depth ROS images from
+Gazebo or a real camera, queries the two model servers, transforms the detected
+point into ``map``, and publishes a stable target pose.
 """
 
 import base64
@@ -27,12 +27,30 @@ from sensor_msgs.msg import CameraInfo, Image
 from std_msgs.msg import String
 from visualization_msgs.msg import Marker
 
+from vlm_sensor_utils import depth_image_to_meters
+
 
 class RealtimeVLM:
     def __init__(self):
         self.target = rospy.get_param("~target", "red chair").strip().lower()
         self.base_class = rospy.get_param("~base_class", "chair").strip().lower()
         self.map_frame = rospy.get_param("~map_frame", "map")
+        # Topic defaults preserve the Gazebo contract. A real camera can use a
+        # namespace or remapped topics without changing this node again.
+        self.rgb_topic = rospy.get_param(
+            "~rgb_topic", "/camera/color/image_raw")
+        self.depth_topic = rospy.get_param(
+            "~depth_topic", "/camera/aligned_depth_to_color/image_raw")
+        self.camera_info_topic = rospy.get_param(
+            "~camera_info_topic", "/camera/color/camera_info")
+        # Gazebo publishes 32FC1 metres. RealSense normally publishes 16UC1
+        # millimetres; this scale converts one integer unit to metres.
+        self.uint16_depth_scale = float(
+            rospy.get_param("~uint16_depth_scale", 0.001))
+        self.yolo_url = rospy.get_param(
+            "~yolo_url", "http://localhost:12184/yolov7")
+        self.clip_url = rospy.get_param(
+            "~clip_url", "http://localhost:12182/blip2itm")
         self.process_rate = float(rospy.get_param("~process_rate", 1.0))
         self.yolo_threshold = float(rospy.get_param("~yolo_threshold", 0.25))
         self.clip_threshold = float(rospy.get_param("~clip_threshold", 0.20))
@@ -58,12 +76,12 @@ class RealtimeVLM:
         self.image_pub = rospy.Publisher("/vlm/detection_image", Image, queue_size=1)
 
         rospy.Subscriber(
-            "/camera/color/camera_info", CameraInfo, self.camera_info_callback,
+            self.camera_info_topic, CameraInfo, self.camera_info_callback,
             queue_size=1,
         )
-        rgb_sub = message_filters.Subscriber("/camera/color/image_raw", Image)
+        rgb_sub = message_filters.Subscriber(self.rgb_topic, Image)
         depth_sub = message_filters.Subscriber(
-            "/camera/aligned_depth_to_color/image_raw", Image
+            self.depth_topic, Image
         )
         sync = message_filters.ApproximateTimeSynchronizer(
             [rgb_sub, depth_sub], queue_size=10, slop=0.08
@@ -72,9 +90,11 @@ class RealtimeVLM:
         self.sync = sync
 
         rospy.loginfo(
-            "Realtime VLM ready: target='%s', processing %.2f Hz",
+            "Realtime VLM ready: target='%s', processing %.2f Hz, RGB=%s, depth=%s",
             self.target,
             self.process_rate,
+            self.rgb_topic,
+            self.depth_topic,
         )
 
     def camera_info_callback(self, message):
@@ -142,12 +162,20 @@ class RealtimeVLM:
     def process_pair(self, rgb_message, depth_message):
         try:
             rgb = self.bridge.imgmsg_to_cv2(rgb_message, desired_encoding="rgb8")
-            depth = self.bridge.imgmsg_to_cv2(depth_message, desired_encoding="32FC1")
+            # Use passthrough so the ROS encoding remains available. Conversion
+            # to metres is explicit and works for both Gazebo and RealSense.
+            raw_depth = self.bridge.imgmsg_to_cv2(
+                depth_message, desired_encoding="passthrough")
+            depth = depth_image_to_meters(
+                raw_depth,
+                depth_message.encoding,
+                uint16_scale=self.uint16_depth_scale,
+            )
             bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
             encoded = self.encode_image(bgr)
 
             detections = self.request(
-                "http://localhost:12184/yolov7", {"image": encoded}
+                self.yolo_url, {"image": encoded}
             )
             candidates = []
             height, width = rgb.shape[:2]
@@ -161,9 +189,12 @@ class RealtimeVLM:
                 crop = rgb[y1:y2, x1:x2]
                 if crop.size == 0:
                     continue
+                # cv2.imencode expects BGR channel order. Without this conversion
+                # red and blue are swapped before the CLIP service sees the crop.
+                crop_bgr = cv2.cvtColor(crop, cv2.COLOR_RGB2BGR)
                 clip = self.request(
-                    "http://localhost:12182/blip2itm",
-                    {"image": self.encode_image(crop),
+                    self.clip_url,
+                    {"image": self.encode_image(crop_bgr),
                      "txt": "a photo of a " + self.target},
                 )
                 similarity = float(clip["response"])

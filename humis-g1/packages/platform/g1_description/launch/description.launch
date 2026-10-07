@@ -6,7 +6,21 @@
        robot, use display.launch (joint_state_publisher sliders/zeros). -->
   <arg name="model" default="$(find g1_description)/urdf/g1.urdf.xacro"/>
 
-  <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
+  <!-- Camera mount calibration. Simulation keeps the zero defaults and supplies
+       its own xacro override. On the real robot set the two environment variables
+       before launch, for example:
+         export G1_D435_TO_CAMERA_XYZ="0.10 0.00 0.08"
+         export G1_D435_TO_CAMERA_RPY="0.00 -0.20 0.00"
+       The example numbers are illustrative only; use measured values. -->
+  <arg name="d435_to_camera_xyz"
+       default="$(optenv G1_D435_TO_CAMERA_XYZ 0 0 0)"/>
+  <arg name="d435_to_camera_rpy"
+       default="$(optenv G1_D435_TO_CAMERA_RPY 0 0 0)"/>
+
+  <param name="robot_description"
+         command="$(find xacro)/xacro $(arg model)
+                  d435_to_camera_xyz:='$(arg d435_to_camera_xyz)'
+                  d435_to_camera_rpy:='$(arg d435_to_camera_rpy)'"/>
 
   <node name="robot_state_publisher" pkg="robot_state_publisher"
         type="robot_state_publisher"/>

@@ -77,11 +77,15 @@ roslaunch g1_nav nav.launch
 roslaunch g1_nav nav.launch start_local:=true start_global:=true start_costmap:=true \
     start_slam:=true map_path:=/path/to/map rviz:=true
 
-# Full LIVE stack (all sub-nodes + robot; e-stop in hand):
+# Full LIVE stack (all sub-nodes + robot; e-stop in hand).
+# start_state already starts g1_locomotion, so do not also start it directly:
 roslaunch g1_nav nav.launch start_local:=true start_global:=true start_costmap:=true \
     start_slam:=true start_frontend:=true start_lidar:=true start_state:=true \
-    start_locomotion:=true map_path:=/path/to/map rviz:=true
+    start_locomotion:=false map_path:=/path/to/map rviz:=true
 ```
+
+`auto_arm` defaults to `true` for the real robot. Simulation-only launchers may pass
+`auto_arm:=false` when no hardware arm/halt services are present.
 
 `g1_nav` is the sole goal authority: the launch remaps the global and local planner
 `/move_base_simple/goal` to `/nav/goal` (so only `g1_nav` forwards goals) and the

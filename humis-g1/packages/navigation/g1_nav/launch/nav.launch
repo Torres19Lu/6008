@@ -29,6 +29,7 @@
     map_path         : forwarded to the backend (load + localize at startup).
     interface        : network interface for the robot (default: G1_NETWORK_INTERFACE env).
     rviz             : launch RViz with the g1_nav view.
+    auto_arm         : arm/halt the hardware locomotion bridge per goal; disable in simulation.
 
   Usage:
     # g1_nav only (sub-nodes already running separately):
@@ -38,10 +39,11 @@
     roslaunch g1_nav nav.launch start_local:=true start_global:=true start_costmap:=true \
       start_slam:=true map_path:=/path/to/map rviz:=true
 
-    # Full live stack (all sub-nodes + robot):
+    # Full live stack (all sub-nodes + robot). start_state already brings up
+    # g1_locomotion, so start_locomotion must remain false to avoid two nodes:
     roslaunch g1_nav nav.launch start_local:=true start_global:=true start_costmap:=true \
       start_slam:=true start_frontend:=true start_lidar:=true start_state:=true \
-      start_locomotion:=true map_path:=/path/to/map rviz:=true
+      start_locomotion:=false map_path:=/path/to/map rviz:=true
 -->
 <launch>
   <arg name="start_local"      default="false"/>  <!-- bring up g1_local_planner -->
@@ -55,6 +57,7 @@
   <arg name="map_path"         default=""/>       <!-- forwarded to backend: load + localize -->
   <arg name="interface"        default="$(optenv G1_NETWORK_INTERFACE)"/>
   <arg name="rviz"             default="false"/>  <!-- launch RViz with nav view -->
+  <arg name="auto_arm"         default="true"/>   <!-- false only for simulation/bench -->
 
   <!-- g1_nav node: ALWAYS launched. Reads all params from nav.yaml.
        goal_topic stays /move_base_simple/goal (NOT remapped) so RViz 2D Nav Goal
@@ -62,6 +65,7 @@
        remapped to /nav/goal. -->
   <node name="g1_nav" pkg="g1_nav" type="g1_nav_node" output="screen">
     <rosparam command="load" file="$(find g1_nav)/config/nav.yaml"/>
+    <param name="auto_arm" value="$(arg auto_arm)"/>
   </node>
 
   <!-- Optional upstream: the local planner (MPC tracker).

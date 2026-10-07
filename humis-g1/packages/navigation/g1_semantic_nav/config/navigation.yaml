@@ -1,0 +1,16 @@
+map_frame: map
+base_frame: base_link
+
+status_topic: /vlm/semantic_target
+target_pose_topic: /vlm/target_pose
+costmap_topic: /nav/costmap
+action_name: /navigate_to
+expected_target: red chair
+
+# Prefer the point 1.2 m in front of the observed object. Other radii and angles
+# are retained as inexpensive fallbacks when that cell or path is blocked.
+approach_radii: [1.2, 1.0, 1.4]
+candidate_angle_degrees: [0, 45, -45, 90, -90, 135, -135, 180]
+max_goal_cost: 50
+target_update_distance: 0.30
+retry_cooldown: 10.0

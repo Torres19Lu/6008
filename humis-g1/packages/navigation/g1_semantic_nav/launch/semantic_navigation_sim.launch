@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- SLAM, Gazebo and ros_vlm_node.py must already be running. -->
+  <arg name="start_nav_stack" default="true"/>
+  <arg name="start_sim_bridge" default="true"/>
+  <arg name="rviz" default="true"/>
+  <arg name="model_name" default="g1_sim"/>
+  <arg name="expected_target" default="red chair"/>
+
+  <include if="$(arg start_nav_stack)"
+           file="$(find g1_nav)/launch/nav.launch">
+    <arg name="start_local" value="true"/>
+    <arg name="start_global" value="true"/>
+    <arg name="start_costmap" value="true"/>
+    <arg name="start_slam" value="false"/>
+    <arg name="start_frontend" value="false"/>
+    <arg name="start_lidar" value="false"/>
+    <arg name="start_state" value="false"/>
+    <arg name="start_locomotion" value="false"/>
+    <arg name="rviz" value="$(arg rviz)"/>
+    <arg name="auto_arm" value="false"/>
+  </include>
+
+  <node if="$(arg start_sim_bridge)"
+        pkg="g1_semantic_nav"
+        type="sim_cmd_vel_bridge.py"
+        name="sim_cmd_vel_bridge"
+        output="screen">
+    <param name="model_name" value="$(arg model_name)"/>
+  </node>
+
+  <node pkg="g1_semantic_nav"
+        type="semantic_goal_adapter.py"
+        name="semantic_goal_adapter"
+        output="screen">
+    <rosparam command="load"
+              file="$(find g1_semantic_nav)/config/navigation.yaml"/>
+    <param name="expected_target" value="$(arg expected_target)"/>
+  </node>
+</launch>

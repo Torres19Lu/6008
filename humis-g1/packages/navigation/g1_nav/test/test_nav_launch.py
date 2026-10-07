@@ -125,6 +125,15 @@ class TestLaunch(unittest.TestCase):
         self.assertNotIn("goal_topic", self._node_params(node),
                          "g1_nav node must NOT override goal_topic")
 
+    def test_auto_arm_is_a_launch_argument(self):
+        args = {a.get("name"): a.get("default")
+                for a in self.root.findall("arg")}
+        self.assertEqual(args.get("auto_arm"), "true")
+        node = next(n for n in self.root.iter("node")
+                    if n.get("type") == "g1_nav_node")
+        self.assertEqual(self._node_params(node).get("auto_arm"),
+                         "$(arg auto_arm)")
+
     def test_no_remap_is_direct_child_of_include(self):
         # Regression guard: roslaunch SILENTLY DROPS a <remap> child of an <include>
         # (its xmlloader honors only <arg>/<env> there), so such a remap is a no-op.

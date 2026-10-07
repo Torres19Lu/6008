@@ -18,6 +18,17 @@ roslaunch g1_description description.launch              # robot_description + R
 ## 🌳 Frames
 `base_link` (identity to `pelvis`, the root) -> URDF chain via the dynamic `waist_yaw_joint` -> `torso_link` -> `{mid360_link, d435_link -> camera_link, head, arms}`. `base_footprint` is the live ground projection; everything else is published by `robot_state_publisher`.
 
+For a real D435, provide the measured mount transform before launching the
+description. Values are metres and radians:
+
+```bash
+export G1_D435_TO_CAMERA_XYZ="X Y Z"
+export G1_D435_TO_CAMERA_RPY="ROLL PITCH YAW"
+```
+
+The zero defaults preserve simulation and URDF-only workflows; they are not a
+substitute for real-camera calibration.
+
 ## ✅ Test
 ```bash
 catkin build g1_description --catkin-make-args run_tests && catkin_test_results build/g1_description

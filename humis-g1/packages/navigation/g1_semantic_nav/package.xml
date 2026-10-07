@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>g1_semantic_nav</name>
+  <version>0.1.0</version>
+  <description>Minimal bridge from a stable VLM map coordinate to the existing G1 navigation stack, plus a Gazebo cmd_vel adapter.</description>
+
+  <maintainer email="luhao@example.com">Lu Hao</maintainer>
+  <license>Proprietary</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>actionlib</depend>
+  <depend>gazebo_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>g1_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>tf</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>tf2_ros</depend>
+
+  <exec_depend>g1_costmap</exec_depend>
+  <exec_depend>g1_global_planner</exec_depend>
+  <exec_depend>g1_local_planner</exec_depend>
+  <exec_depend>g1_nav</exec_depend>
+  <exec_depend>realsense2_camera</exec_depend>
+
+  <test_depend>python3-nose</test_depend>
+</package>

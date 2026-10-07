@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<!--
+  Real-G1 semantic navigation composition.
+
+  This launch intentionally contains no Gazebo node and no sim_cmd_vel_bridge.
+  g1_locomotion consumes the sole /cmd_vel output from g1_nav and forwards it to
+  the robot. The robot must be in its balanced walk FSM before it can move.
+
+  A saved map and calibrated camera mount are required. The camera mount values
+  are read by g1_description from G1_D435_TO_CAMERA_XYZ/RPY.
+-->
+<launch>
+  <arg name="map_path"/>                              <!-- required saved real map -->
+  <arg name="interface" default="$(optenv G1_NETWORK_INTERFACE)"/>
+  <arg name="expected_target" default="red chair"/>
+  <arg name="rviz" default="true"/>
+  <arg name="auto_arm" default="false"/>             <!-- false is the safe first-run default -->
+
+  <!-- Set start_camera=false when a RealSense driver is already running. -->
+  <arg name="start_camera" default="true"/>
+  <arg name="camera_name" default="camera"/>
+  <arg name="camera_serial" default=""/>
+
+  <!-- The RealSense driver publishes RGB, aligned depth, CameraInfo and its
+       internal camera optical TF tree. The robot description supplies the
+       calibrated d435_link -> camera_link mount transform. -->
+  <include if="$(arg start_camera)"
+           file="$(find realsense2_camera)/launch/rs_camera.launch">
+    <arg name="camera" value="$(arg camera_name)"/>
+    <arg name="serial_no" value="$(arg camera_serial)"/>
+    <arg name="enable_color" value="true"/>
+    <arg name="enable_depth" value="true"/>
+    <arg name="align_depth" value="true"/>
+    <arg name="enable_sync" value="true"/>
+    <arg name="publish_tf" value="true"/>
+  </include>
+
+  <!-- start_state=true already starts g1_locomotion plus g1_description through
+       SLAM frontend. Therefore start_locomotion MUST stay false here; setting both
+       true would create two g1_locomotion nodes. -->
+  <include file="$(find g1_nav)/launch/nav.launch">
+    <arg name="start_local" value="true"/>
+    <arg name="start_global" value="true"/>
+    <arg name="start_costmap" value="true"/>
+    <arg name="start_slam" value="true"/>
+    <arg name="start_frontend" value="true"/>
+    <arg name="start_lidar" value="true"/>
+    <arg name="start_state" value="true"/>
+    <arg name="start_locomotion" value="false"/>
+    <arg name="map_path" value="$(arg map_path)"/>
+    <arg name="interface" value="$(arg interface)"/>
+    <arg name="rviz" value="$(arg rviz)"/>
+    <arg name="auto_arm" value="$(arg auto_arm)"/>
+  </include>
+
+  <!-- This adapter is hardware-independent. It converts the VLM object position
+       into a free approach pose and sends GOAL_POSE to g1_nav. -->
+  <node pkg="g1_semantic_nav"
+        type="semantic_goal_adapter.py"
+        name="semantic_goal_adapter"
+        output="screen">
+    <rosparam command="load"
+              file="$(find g1_semantic_nav)/config/navigation.yaml"/>
+    <param name="expected_target" value="$(arg expected_target)"/>
+    <!-- Real hardware never accepts a VLM goal until the operator explicitly
+         calls /semantic_goal_adapter/enable with data=true. -->
+    <param name="enabled_on_start" value="false"/>
+  </node>
+</launch>
