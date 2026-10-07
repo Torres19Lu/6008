@@ -345,7 +345,7 @@ python test_bag_depth.py \
 
 ### 运行真实语义定位
 
-确保 OpenCLIP 和 YOLOv7 已经启动，然后执行：
+默认的 CLIP 模式需要 OpenCLIP 和 YOLOv7 都已经启动，然后执行：
 
 ```
 python bag_vlm_localizer.py \
@@ -355,6 +355,26 @@ python bag_vlm_localizer.py \
   --frame-stride 5 \
   --max-pairs 20
 ```
+
+保留同一套 bag、深度、TF 和 map 坐标流程，也可以只使用 YOLOv7 + HSV
+颜色筛选，不启动 OpenCLIP：
+
+```
+python bag_vlm_localizer.py \
+  "/path/to/g1_red_chair_demo.bag" \
+  --target "red chair" \
+  --base-class chair \
+  --semantic-backend hsv \
+  --color-score-threshold 0.03 \
+  --frame-stride 5 \
+  --max-pairs 20
+```
+
+`--semantic-backend` 默认为 `clip`，因此原有命令的行为保持不变。HSV 模式
+支持常见颜色 + YOLO 基础类别；输出中的语义分数字段会从
+`clip_similarity` 改为 `color_score`。运行 HSV 模式时只需启动 YOLOv7 服务；
+现有 `launch_vlm_servers_lite.sh` 为兼容旧流程仍会同时启动 OpenCLIP，额外启动
+的 CLIP 不会被 HSV 路径调用，但会占用资源。
 
 运行成功后会：
 

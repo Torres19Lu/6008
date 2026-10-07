@@ -1,0 +1,64 @@
+{
+  "target_text": "red chair",
+  "base_class": "chair",
+  "frames": [
+    {
+      "stamp": 100.0,
+      "source_frame": "camera_color_optical_frame",
+      "image_size": [640, 480],
+      "detections": [
+        {"class_name": "chair", "box": [0.40, 0.30, 0.60, 0.85], "detector_confidence": 0.966, "text_similarity": 0.81},
+        {"class_name": "chair", "box": [0.05, 0.30, 0.25, 0.85], "detector_confidence": 0.93, "text_similarity": 0.12}
+      ],
+      "registered_depth_points": [
+        {"u": 300, "v": 260, "x": -0.02, "y": 0.70, "z": 1.99},
+        {"u": 320, "v": 250, "x": 0.00, "y": 0.70, "z": 2.00},
+        {"u": 340, "v": 270, "x": 0.02, "y": 0.70, "z": 2.01}
+      ],
+      "sensor_to_map": [
+        [0.5, 0.0, 0.8660254, 1.0],
+        [-0.8660254, 0.0, 0.5, 2.0],
+        [0.0, -1.0, 0.0, 1.12],
+        [0.0, 0.0, 0.0, 1.0]
+      ]
+    },
+    {
+      "stamp": 100.1,
+      "source_frame": "camera_color_optical_frame",
+      "image_size": [640, 480],
+      "detections": [
+        {"class_name": "chair", "box": [0.40, 0.30, 0.60, 0.85], "detector_confidence": 0.95, "text_similarity": 0.83}
+      ],
+      "registered_depth_points": [
+        {"u": 300, "v": 260, "x": -0.01, "y": 0.69, "z": 1.98},
+        {"u": 320, "v": 250, "x": 0.01, "y": 0.70, "z": 1.99},
+        {"u": 340, "v": 270, "x": 0.03, "y": 0.71, "z": 2.00}
+      ],
+      "sensor_to_map": [
+        [0.5, 0.0, 0.8660254, 1.0],
+        [-0.8660254, 0.0, 0.5, 2.0],
+        [0.0, -1.0, 0.0, 1.12],
+        [0.0, 0.0, 0.0, 1.0]
+      ]
+    },
+    {
+      "stamp": 100.2,
+      "source_frame": "camera_color_optical_frame",
+      "image_size": [640, 480],
+      "detections": [
+        {"class_name": "chair", "box": [0.40, 0.30, 0.60, 0.85], "detector_confidence": 0.97, "text_similarity": 0.82}
+      ],
+      "registered_depth_points": [
+        {"u": 300, "v": 260, "x": -0.03, "y": 0.69, "z": 2.00},
+        {"u": 320, "v": 250, "x": -0.01, "y": 0.70, "z": 2.01},
+        {"u": 340, "v": 270, "x": 0.01, "y": 0.71, "z": 2.02}
+      ],
+      "sensor_to_map": [
+        [0.5, 0.0, 0.8660254, 1.0],
+        [-0.8660254, 0.0, 0.5, 2.0],
+        [0.0, -1.0, 0.0, 1.12],
+        [0.0, 0.0, 0.0, 1.0]
+      ]
+    }
+  ]
+}

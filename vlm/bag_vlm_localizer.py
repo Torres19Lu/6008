@@ -2,6 +2,7 @@ import argparse
 import bisect
 import json
 import os
+import re
 import sys
 from collections import defaultdict, deque
 from pathlib import Path
@@ -23,7 +24,6 @@ if VLFM_REPO.exists():
     sys.path.insert(0, str(VLFM_REPO))
 
 try:
-    from vlfm.vlm.server_wrapper import send_request
     from vlfm.vlm.yolov7 import YOLOv7Client
 except ModuleNotFoundError as error:
     raise RuntimeError(
@@ -41,6 +41,80 @@ TF_STATIC_TOPIC = "/tf_static"
 
 CAMERA_FRAME = "camera_color_optical_frame"
 MAP_FRAME = "map"
+
+
+# The HSV path is deliberately self-contained so the offline localizer does
+# not need to import or start an OpenCLIP service.  The aliases match the
+# common Chinese/English queries used by the lightweight locator.
+COLOR_ALIASES = {
+    "red": ("红色", "红", "red"),
+    "orange": ("橙色", "橙", "orange"),
+    "yellow": ("黄色", "黄", "yellow"),
+    "green": ("绿色", "绿", "green"),
+    "cyan": ("青色", "青", "cyan"),
+    "blue": ("蓝色", "蓝", "blue"),
+    "purple": ("紫色", "紫", "purple", "violet"),
+    "pink": ("粉红色", "粉色", "粉", "pink"),
+    "brown": ("棕色", "褐色", "棕", "brown"),
+    "black": ("黑色", "黑", "black"),
+    "white": ("白色", "白", "white"),
+    "gray": ("灰色", "灰", "gray", "grey"),
+}
+
+
+def _contains_alias(text, alias):
+    text = text.casefold()
+    alias = alias.casefold()
+    if any("\u4e00" <= character <= "\u9fff" for character in alias):
+        return alias in text
+    return re.search(r"(?<![a-z0-9]){}(?![a-z0-9])".format(re.escape(alias)), text) is not None
+
+
+def extract_color(target_text):
+    matches = (
+        (len(alias), canonical)
+        for canonical, aliases in COLOR_ALIASES.items()
+        for alias in aliases
+        if _contains_alias(target_text, alias)
+    )
+    return max(matches, default=(0, None))[1]
+
+
+def color_score_bgr(image_bgr, color):
+    """Return the fraction of crop pixels matching a supported HSV color."""
+
+    if image_bgr is None or image_bgr.size == 0:
+        return 0.0
+    hsv = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2HSV)
+    hue, saturation, value = hsv[..., 0], hsv[..., 1], hsv[..., 2]
+
+    if color == "red":
+        mask = (((hue <= 10) | (hue >= 170)) & (saturation >= 80) & (value >= 45))
+    elif color == "orange":
+        mask = ((hue >= 10) & (hue <= 24) & (saturation >= 75) & (value >= 55))
+    elif color == "yellow":
+        mask = ((hue >= 24) & (hue <= 36) & (saturation >= 70) & (value >= 70))
+    elif color == "green":
+        mask = ((hue >= 36) & (hue <= 85) & (saturation >= 55) & (value >= 40))
+    elif color == "cyan":
+        mask = ((hue >= 85) & (hue <= 100) & (saturation >= 55) & (value >= 45))
+    elif color == "blue":
+        mask = ((hue >= 100) & (hue <= 130) & (saturation >= 65) & (value >= 40))
+    elif color == "purple":
+        mask = ((hue >= 130) & (hue <= 160) & (saturation >= 50) & (value >= 40))
+    elif color == "pink":
+        mask = (((hue >= 160) | (hue <= 5)) & (saturation >= 35) & (value >= 100))
+    elif color == "brown":
+        mask = ((hue >= 5) & (hue <= 25) & (saturation >= 50) & (value >= 35) & (value <= 190))
+    elif color == "black":
+        mask = value <= 60
+    elif color == "white":
+        mask = (saturation <= 40) & (value >= 180)
+    elif color == "gray":
+        mask = (saturation <= 55) & (value >= 60) & (value <= 210)
+    else:
+        raise ValueError("不支持的颜色：{}".format(color))
+    return float(np.count_nonzero(mask)) / float(mask.size)
 
 
 def parse_args():
@@ -90,6 +164,19 @@ def parse_args():
         "--clip-threshold",
         type=float,
         default=0.20,
+        help="CLIP 最低相似度；仅在 --semantic-backend clip 时使用",
+    )
+    parser.add_argument(
+        "--semantic-backend",
+        choices=("clip", "hsv"),
+        default="clip",
+        help="二维语义筛选后端：clip（默认）或 hsv",
+    )
+    parser.add_argument(
+        "--color-score-threshold",
+        type=float,
+        default=0.03,
+        help="HSV 颜色像素比例阈值；仅在 --semantic-backend hsv 时使用",
     )
     return parser.parse_args()
 
@@ -503,6 +590,8 @@ def localize_frame(
     base_class,
     yolo_threshold,
     clip_threshold,
+    semantic_backend="clip",
+    color_score_threshold=0.03,
 ):
     image_bgr = cv2.cvtColor(
         rgb,
@@ -519,6 +608,7 @@ def localize_frame(
     height, width = rgb.shape[:2]
     candidates = []
 
+    requested_color = extract_color(target_text) if semantic_backend == "hsv" else None
     for index in range(detections.num_detections):
         box = detections.boxes[index].tolist()
         yolo_confidence = float(
@@ -532,16 +622,29 @@ def localize_frame(
         )
         px1, py1, px2, py2 = pixel_box
 
-        crop_rgb = rgb[py1:py2, px1:px2]
-        if crop_rgb.size == 0:
+        crop_bgr = image_bgr[py1:py2, px1:px2]
+        if crop_bgr.size == 0:
             continue
 
-        response = send_request(
-            "http://localhost:12182/blip2itm",
-            image=crop_rgb,
-            txt=f"a photo of a {target_text}",
-        )
-        clip_similarity = float(response["response"])
+        if semantic_backend == "clip":
+            # Import lazily so HSV mode does not require a running CLIP
+            # service or even the CLIP client module at startup.
+            from vlfm.vlm.server_wrapper import send_request
+
+            response = send_request(
+                "http://localhost:12182/blip2itm",
+                image=cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2RGB),
+                txt=f"a photo of a {target_text}",
+            )
+            semantic_score = float(response["response"])
+        else:
+            # Without a color adjective, fall back to YOLO confidence.  This
+            # keeps queries such as "chair" useful in HSV mode.
+            semantic_score = (
+                1.0
+                if requested_color is None
+                else color_score_bgr(crop_bgr, requested_color)
+            )
 
         depth_m = robust_depth_in_box(
             depth,
@@ -598,7 +701,7 @@ def localize_frame(
                 ],
                 "depth_m": depth_m,
                 "yolo_confidence": yolo_confidence,
-                "clip_similarity": clip_similarity,
+                "semantic_score": semantic_score,
                 "bbox_normalized": box,
             }
         )
@@ -606,17 +709,28 @@ def localize_frame(
     if not candidates:
         return None, "检测到 chair，但没有有效深度"
 
-    best = max(
-        candidates,
-        key=lambda item: item["clip_similarity"],
-    )
-
-    if best["clip_similarity"] < clip_threshold:
-        return (
-            None,
-            "OpenCLIP 相似度低于阈值："
-            f"{best['clip_similarity']:.3f}",
-        )
+    if semantic_backend == "clip":
+        best = max(candidates, key=lambda item: item["semantic_score"])
+        if best["semantic_score"] < clip_threshold:
+            return (
+                None,
+                "OpenCLIP 相似度低于阈值："
+                f"{best['semantic_score']:.3f}",
+            )
+    else:
+        if requested_color is not None:
+            best = max(
+                candidates,
+                key=lambda item: item["yolo_confidence"] * item["semantic_score"],
+            )
+            if best["semantic_score"] < color_score_threshold:
+                return (
+                    None,
+                    "HSV 颜色比例低于阈值："
+                    f"{best['semantic_score']:.3f}",
+                )
+        else:
+            best = max(candidates, key=lambda item: item["yolo_confidence"])
 
     return best, "成功"
 
@@ -643,6 +757,12 @@ def main():
 
     target_text = args.target.strip().lower()
     base_class = args.base_class.strip().lower()
+
+    if args.semantic_backend == "hsv" and extract_color(target_text) is None:
+        print(
+            "警告：目标文字中没有识别到内置颜色；"
+            "HSV 模式将只按 YOLO 置信度选择候选。"
+        )
 
     print("读取 CameraInfo 和 TF...")
     intrinsics, transform_store = load_camera_and_tf(
@@ -741,6 +861,8 @@ def main():
                     base_class=base_class,
                     yolo_threshold=args.yolo_threshold,
                     clip_threshold=args.clip_threshold,
+                    semantic_backend=args.semantic_backend,
+                    color_score_threshold=args.color_score_threshold,
                 )
             except Exception as error:
                 observation = None
@@ -820,20 +942,16 @@ def main():
             ),
             3,
         ),
-        "clip_similarity": round(
-            float(
-                np.median(
-                    [
-                        item["clip_similarity"]
-                        for item in observations
-                    ]
-                )
-            ),
-            3,
-        ),
+        "semantic_backend": args.semantic_backend,
         "observation_count": len(observations),
         "source": str(bag_path),
     }
+
+    score_name = "clip_similarity" if args.semantic_backend == "clip" else "color_score"
+    semantic_object[score_name] = round(
+        float(np.median([item["semantic_score"] for item in observations])),
+        3,
+    )
 
     memory = load_existing_memory(output_path)
     memory[target_text] = semantic_object
